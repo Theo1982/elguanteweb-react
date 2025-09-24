@@ -82,6 +82,7 @@ function cargarProductos() {
         categoria: p.Categoria?.trim(),
         imagen: p.imagen?.trim() || '',
         descripcion: p.Descripción?.trim() || '',
+        handle: p.Handle?.trim() || '',
         fechaCreacion: new Date(),
         activo: true
       };

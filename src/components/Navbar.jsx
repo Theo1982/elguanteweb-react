@@ -72,6 +72,10 @@ const Navbar = memo(function Navbar() {
                   <span aria-hidden="true">📜</span>
                   <span>Historial</span>
                 </Link>
+                <Link to="/favorites" className={`navbar-link ${isActive("/favorites") ? "active" : ""}`}>
+                  <span aria-hidden="true">❤️</span>
+                  <span>Favoritos</span>
+                </Link>
               </>
             )}
             {profile?.role === "admin" && (
@@ -163,6 +167,10 @@ const Navbar = memo(function Navbar() {
               <Link to="/history" className={`navbar-link navbar-mobile-link ${isActive("/history") ? "active" : ""}`}>
                 <span aria-hidden="true">📜</span>
                 <span>Historial</span>
+              </Link>
+              <Link to="/favorites" className={`navbar-link navbar-mobile-link ${isActive("/favorites") ? "active" : ""}`}>
+                <span aria-hidden="true">❤️</span>
+                <span>Favoritos</span>
               </Link>
             </>
           )}

@@ -40,12 +40,14 @@ export function CartProvider({ children }) {
       return;
     }
 
+    const variant = product.variant || '';
+
     setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.id === product.id);
+      const existing = prevCart.find((item) => item.id === product.id && item.variant === variant);
 
       if (existing) {
         return prevCart.map((item) =>
-          item.id === product.id
+          item.id === product.id && item.variant === variant
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
@@ -53,13 +55,14 @@ export function CartProvider({ children }) {
         // Validar campos requeridos
         const newItem = {
           id: product.id,
-          nombre: product.nombre || 'Producto sin nombre',
+          variant,
+          nombre: product.nombre + (variant ? ` (${variant})` : ''),
           precio: Number(product.precio) || 0,
           imagen: product.imagen || '/img/placeholder.jpg',
           descripcion: product.descripcion || '',
           quantity: 1,
         };
-        
+
         return [...prevCart, newItem];
       }
     });

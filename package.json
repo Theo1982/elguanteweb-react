@@ -14,7 +14,13 @@
     "format": "prettier --write \"src/**/*.{js,jsx,json,css,md}\"",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "build:prod": "ng build emsmart --configuration=production && yarn sentry:sourcemaps",
+    "build:preprod": "ng build emsmart --configuration=preprod && yarn sentry:sourcemaps",
+    "build:apm": "ng build emsmart --configuration=apm && yarn sentry:sourcemaps",
+    "build:stage": "ng build emsmart --configuration=stage && yarn sentry:sourcemaps",
+    "build:dev": "ng build emsmart --configuration=development && yarn build-storybook && yarn sentry:sourcemaps",
+    "build:qa": "ng build emsmart --configuration=qa && yarn sentry:sourcemaps"
   },
   "dependencies": {
     "cors": "^2.8.5",

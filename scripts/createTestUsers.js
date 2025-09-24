@@ -1,6 +1,6 @@
 // scripts/createTestUsers.js
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 // Configuración de Firebase
@@ -21,8 +21,8 @@ const db = getFirestore(app);
 // Usuarios de ejemplo
 const usuariosEjemplo = [
   {
-    email: "admin@demo.com",
-    password: "123456",
+    email: "elguantelp@gmail.com",
+    password: "R2d2c3po!",
     displayName: "Administrador",
     role: "admin"
   },
@@ -36,44 +36,62 @@ const usuariosEjemplo = [
 
 async function crearUsuarios() {
   try {
-    console.log("👥 Creando usuarios de ejemplo...");
-    
+    console.log("👥 Creando/actualizando usuarios de ejemplo...");
+
     for (const usuario of usuariosEjemplo) {
       try {
-        // Crear usuario en Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(
-          auth, 
-          usuario.email, 
-          usuario.password
-        );
-        
-        // Actualizar perfil con displayName
-        await updateProfile(userCredential.user, {
-          displayName: usuario.displayName
-        });
-        
-        // Crear documento en Firestore
-        await setDoc(doc(db, "usuarios", userCredential.user.uid), {
+        let userCredential;
+        let uid;
+
+        try {
+          // Intentar crear usuario en Firebase Auth
+          userCredential = await createUserWithEmailAndPassword(
+            auth,
+            usuario.email,
+            usuario.password
+          );
+
+          // Actualizar perfil con displayName
+          await updateProfile(userCredential.user, {
+            displayName: usuario.displayName
+          });
+
+          uid = userCredential.user.uid;
+          console.log(`✅ Usuario creado: ${usuario.email} (${usuario.role})`);
+
+        } catch (createError) {
+          if (createError.code === 'auth/email-already-in-use') {
+            // Usuario ya existe, hacer login para obtener uid
+            console.log(`⚠️  Usuario ya existe: ${usuario.email}, actualizando role...`);
+            userCredential = await signInWithEmailAndPassword(
+              auth,
+              usuario.email,
+              usuario.password
+            );
+            uid = userCredential.user.uid;
+          } else {
+            throw createError;
+          }
+        }
+
+        // Crear/actualizar documento en Firestore
+        await setDoc(doc(db, "usuarios", uid), {
           nombre: usuario.displayName,
           email: usuario.email,
           role: usuario.role,
           creado: new Date(),
-        });
-        
-        console.log(`✅ Usuario creado: ${usuario.email} (${usuario.role})`);
-        
+        }, { merge: true }); // Usar merge para actualizar sin sobrescribir otros campos
+
+        console.log(`✅ Usuario actualizado: ${usuario.email} (${usuario.role})`);
+
       } catch (error) {
-        if (error.code === 'auth/email-already-in-use') {
-          console.log(`⚠️  Usuario ya existe: ${usuario.email}`);
-        } else {
-          console.error(`❌ Error creando usuario ${usuario.email}:`, error.message);
-        }
+        console.error(`❌ Error procesando usuario ${usuario.email}:`, error.message);
       }
     }
     
     console.log("🎉 ¡Usuarios de ejemplo creados exitosamente!");
     console.log("\n📋 Credenciales de acceso:");
-    console.log("👑 Admin: admin@demo.com / 123456");
+    console.log("👑 Admin: elguantelp@gmail.com / R2d2c3po!");
     console.log("👤 Usuario: user@demo.com / 123456");
     
   } catch (error) {

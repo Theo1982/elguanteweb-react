@@ -5,9 +5,11 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { FavoritesProvider } from "./context/FavoritesContext";
 import useCreateUserDoc from "./hooks/useCreateUserDoc";
 import LoadingSpinner from "./components/LoadingSpinner";
 import ToastContainer from "./components/ToastContainer";
+import Chatbot from "./components/Chatbot";
 
 
 // Lazy loading de componentes para mejor rendimiento
@@ -20,6 +22,7 @@ const Failure = lazy(() => import("./pages/Failure"));
 const Pending = lazy(() => import("./pages/Pending"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const Favorites = lazy(() => import("./pages/Favorites"));
 const Start = lazy(() => import("./pages/Start"));
 const Shop = lazy(() => import("./pages/Shop"));
 
@@ -41,7 +44,7 @@ function AppContent() {
             element={
               <>
                 <Navbar />
-                <main style={{ minHeight: 'calc(100vh - 80px)' }}>
+                <main style={{ minHeight: 'calc(100vh - 70px)', paddingTop: '70px' }}>
                   <Routes>
                         <Route path="/home" element={<Navigate to="/shop" replace />} />
                     <Route path="/shop" element={<Shop />} />
@@ -63,15 +66,23 @@ function AppContent() {
                         </ProtectedRoute>
                       } 
                     />
-                    <Route 
-                      path="/profile" 
+                    <Route
+                      path="/profile"
                       element={
                         <ProtectedRoute>
                           <Profile />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    
+                    <Route
+                      path="/favorites"
+                      element={
+                        <ProtectedRoute>
+                          <Favorites />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     {/* Rutas de pago */}
                     <Route path="/success" element={<Success />} />
                     <Route path="/failure" element={<Failure />} />
@@ -106,6 +117,7 @@ function AppContent() {
                       } 
                     />
                   </Routes>
+                  <Chatbot />
                 </main>
               </>
             }
@@ -120,8 +132,10 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <ToastContainer />
-        <AppContent />
+        <FavoritesProvider>
+          <ToastContainer />
+          <AppContent />
+        </FavoritesProvider>
       </CartProvider>
     </AuthProvider>
   );

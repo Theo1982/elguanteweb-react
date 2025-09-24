@@ -1,17 +1,38 @@
 // src/components/ProductCard.jsx
-import React, { useState, memo } from "react";
+import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useFavorites } from "../context/FavoritesContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import LazyImage from "./LazyImage";
 import "../styles/ProductCard.css";
 
-const ProductCard = memo(function ProductCard({ product }) {
+const ProductCard = ({ product }) => {
+  // Define fragrances for specific products
+  const getFragrances = (product) => {
+    const handle = product.handle || "";
+
+    if (handle === "jabon-liquido-ropa") {
+      return ["verde", "azul", "violeta"];
+    } else if (handle === "detergente-oxigel") {
+      return ["naranja", "limón", "marino"];
+    } else if (handle === "desodorante-piso") {
+      return ["marino", "lavanda", "limón", "citronela", "chicle", "espadol", "pino", "fresias", "manzana/canela"];
+    } else if (handle === "suavizante-original") {
+      return ["brisa", "flowers", "coniglio"];
+    }
+    return null;
+  };
+
+  const fragrances = getFragrances(product);
+
   const { addToCart, isInCart, getItemQuantity } = useCart();
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [selectedFragrance, setSelectedFragrance] = useState(fragrances ? fragrances[0] : "");
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -21,12 +42,29 @@ const ProductCard = memo(function ProductCard({ product }) {
 
     setIsLoading(true);
     try {
-      await addToCart(product);
+      await addToCart({ ...product, variant: fragrances ? selectedFragrance : '' });
       // Aquí podrías agregar una notificación toast
     } catch (error) {
       console.error('Error adding to cart:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      if (isFavorite(product.id)) {
+        await removeFromFavorites(product.id);
+      } else {
+        await addToFavorites(product);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 
@@ -94,6 +132,32 @@ const ProductCard = memo(function ProductCard({ product }) {
         </span>
       )}
 
+      {/* Fragrance Selector */}
+      {fragrances && (
+        <div className="product-card-fragrance">
+          <label htmlFor={`fragrance-${product.id}`}>Fragancia:</label>
+          <select
+            id={`fragrance-${product.id}`}
+            value={selectedFragrance}
+            onChange={(e) => setSelectedFragrance(e.target.value)}
+            className="product-card-fragrance-select"
+          >
+            {fragrances.map((frag) => (
+              <option key={frag} value={frag}>{frag}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Favorite Button */}
+      <button
+        className={`product-card-favorite ${isFavorite(product.id) ? 'active' : ''}`}
+        onClick={handleToggleFavorite}
+        title={isFavorite(product.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+      >
+        {isFavorite(product.id) ? '❤️' : '🤍'}
+      </button>
+
       {/* Add to Cart Button */}
       <button
         className={getButtonClass()}
@@ -121,7 +185,7 @@ const ProductCard = memo(function ProductCard({ product }) {
       </button>
     </div>
   );
-});
+};
 
 ProductCard.displayName = 'ProductCard';
 
