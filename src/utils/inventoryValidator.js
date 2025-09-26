@@ -1,5 +1,6 @@
 // src/utils/inventoryValidator.js
 import { logger } from './logger.js';
+import { collection, doc, getDoc, getDocs, runTransaction, updateDoc } from 'firebase/firestore';
 
 // Validaciones de inventario en tiempo real
 export class InventoryValidator {
@@ -11,10 +12,10 @@ export class InventoryValidator {
   // Validar stock antes de una operación
   async validateStock(productId, requestedQuantity, operation = 'unknown') {
     try {
-      const productRef = this.db.collection('productos').doc(productId);
-      const productDoc = await productRef.get();
+      const productRef = doc(collection(this.db, 'productos'), productId);
+      const productDoc = await getDoc(productRef);
 
-      if (!productDoc.exists) {
+      if (!productDoc.exists()) {
         const error = new Error(`Producto ${productId} no encontrado`);
         this.logger.invalidData('productId', productId, 'Producto no existe', {
           operation,
@@ -138,9 +139,9 @@ export class InventoryValidator {
   // Actualizar stock después de una operación
   async updateStock(productId, quantityChange, operation = 'stock_update') {
     try {
-      const productRef = this.db.collection('productos').doc(productId);
+      const productRef = doc(collection(this.db, 'productos'), productId);
 
-      return await this.db.runTransaction(async (transaction) => {
+      return await runTransaction(this.db, async (transaction) => {
         const productDoc = await transaction.get(productRef);
 
         if (!productDoc.exists) {
@@ -192,16 +193,16 @@ export class InventoryValidator {
   // Obtener resumen de inventario
   async getInventorySummary() {
     try {
-      const productsRef = this.db.collection('productos');
-      const snapshot = await productsRef.get();
+      const productsRef = collection(this.db, 'productos');
+      const snapshot = await getDocs(productsRef);
 
       let totalProducts = 0;
       let totalValue = 0;
       let lowStockProducts = [];
       let outOfStockProducts = [];
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
         totalProducts++;
 
         const stock = data.stock || 0;
@@ -210,13 +211,13 @@ export class InventoryValidator {
 
         if (stock === 0) {
           outOfStockProducts.push({
-            id: doc.id,
+            id: docSnap.id,
             nombre: data.nombre,
             precio: precio
           });
         } else if (stock <= 5) {
           lowStockProducts.push({
-            id: doc.id,
+            id: docSnap.id,
             nombre: data.nombre,
             stock: stock,
             precio: precio

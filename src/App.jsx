@@ -33,6 +33,7 @@ function AppContent() {
   return (
     <Router>
       <Suspense fallback={<LoadingSpinner />}>
+        <Chatbot />
         <Routes>
           <Route path="/" element={<Start />} />
           <Route path="/start" element={<Start />} />
@@ -48,23 +49,23 @@ function AppContent() {
                   <Routes>
                         <Route path="/home" element={<Navigate to="/shop" replace />} />
                     <Route path="/shop" element={<Shop />} />
-                    
+
                     {/* Rutas que requieren autenticación */}
-                    <Route 
-                      path="/cart" 
+                    <Route
+                      path="/cart"
                       element={
                         <ProtectedRoute>
                           <Cart />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/history" 
+                    <Route
+                      path="/history"
                       element={
                         <ProtectedRoute>
                           <History />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
                     <Route
                       path="/profile"
@@ -87,37 +88,36 @@ function AppContent() {
                     <Route path="/success" element={<Success />} />
                     <Route path="/failure" element={<Failure />} />
                     <Route path="/pending" element={<Pending />} />
-                    
+
                     {/* Rutas de administrador */}
-                    <Route 
-                      path="/admin" 
+                    <Route
+                      path="/admin"
                       element={
                         <ProtectedRoute requiredRole="admin">
                           <Admin />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/admin-users" 
+                    <Route
+                      path="/admin-users"
                       element={
                         <ProtectedRoute requiredRole="admin">
                           <AdminUsers />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    
+
                     {/* Ruta 404 */}
-                    <Route 
-                      path="*" 
+                    <Route
+                      path="*"
                       element={
                         <div style={{ padding: '2rem', textAlign: 'center' }}>
                           <h2>404 - Página no encontrada</h2>
                           <p>La página que buscas no existe.</p>
                         </div>
-                      } 
+                      }
                     />
                   </Routes>
-                  <Chatbot />
                 </main>
               </>
             }

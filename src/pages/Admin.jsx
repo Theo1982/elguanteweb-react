@@ -42,7 +42,13 @@ export default function Admin() {
     setCargandoProductos(true);
     try {
       const q = await getDocs(collection(db, "productos"));
-      const items = q.docs.map((d) => ({ id: d.id, ...d.data() }));
+      let items = q.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // Remove duplicates based on nombre (assuming product names are unique)
+      items = items.filter((item, index, self) =>
+        index === self.findIndex(t => t.nombre === item.nombre)
+      );
+
       items.sort((a, b) => a.nombre.localeCompare(b.nombre));
       setProductos(items);
     } catch (err) {

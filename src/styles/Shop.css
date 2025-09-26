@@ -74,12 +74,7 @@
   justify-items: center;
 }
 
-/* Responsive grid */
-@media (max-width: 1200px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+
 
 @media (max-width: 900px) {
   .grid {

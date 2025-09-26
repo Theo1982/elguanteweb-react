@@ -31,28 +31,8 @@ const LazyImage = ({
       onError && onError();
     };
 
-    // Solo cargar la imagen si está en el viewport o cerca
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            img.src = src;
-            observer.disconnect();
-          }
-        });
-      },
-      {
-        rootMargin: '50px' // Cargar 50px antes de que la imagen entre en el viewport
-      }
-    );
-
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
+    // Cargar la imagen inmediatamente
+    img.src = src;
   }, [src, placeholder, onLoad, onError]);
 
   const imageStyle = {

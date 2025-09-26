@@ -1,13 +1,13 @@
 // scripts/populateFirestore.js
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, writeBatch, getDocs, doc } from "firebase/firestore";
+import { getFirestore, collection, writeBatch, getDocs, doc, addDoc, updateDoc } from "firebase/firestore";
 import fs from "fs";
 import dotenv from "dotenv";
 import { logger } from "../src/utils/logger.js";
 import { createInventoryValidator } from "../src/utils/inventoryValidator.js";
 
 // Cargar variables de entorno
-dotenv.config();
+dotenv.config({ path: '.env.local' });
 
 // Validar variables de entorno requeridas
 const requiredEnvVars = [
@@ -212,18 +212,19 @@ async function poblarFirestore() {
     console.log("🔥 Iniciando población de Firestore...");
     console.log(`📊 Total de productos a procesar: ${productosEjemplo.length}`);
 
-    // Verificar si ya existen productos
-    const productosExistentes = await getDocs(collection(db, "productos"));
+    // Obtener productos existentes para actualizar en lugar de duplicar
+    const productosExistentesSnapshot = await getDocs(collection(db, "productos"));
+    const productosExistentes = {};
+    productosExistentesSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.handle) {
+        productosExistentes[data.handle] = { id: doc.id, data };
+      }
+    });
 
-    if (productosExistentes.size > 0) {
-      console.log(`⚠️  Ya existen ${productosExistentes.size} productos en Firestore.`);
-      console.log("¿Deseas continuar y agregar más productos? (Ctrl+C para cancelar)");
+    console.log(`📋 Encontrados ${Object.keys(productosExistentes).length} productos existentes en Firestore.`);
 
-      // Esperar 5 segundos para dar tiempo al usuario de cancelar
-      await new Promise(resolve => setTimeout(resolve, 5000));
-    }
-
-    // Validar productos antes de insertar
+    // Validar productos antes de procesar
     console.log("🔍 Validando productos con el sistema de inventario...");
     const productosValidados = [];
     const productosInvalidos = [];
@@ -240,7 +241,7 @@ async function poblarFirestore() {
       }
     }
 
-    console.log(`✅ ${productosValidados.length} productos válidos para inserción`);
+    console.log(`✅ ${productosValidados.length} productos válidos para procesar`);
     if (productosInvalidos.length > 0) {
       console.log(`⚠️  ${productosInvalidos.length} productos inválidos serán omitidos`);
       logger.warn(`${productosInvalidos.length} productos inválidos omitidos`, {
@@ -249,16 +250,32 @@ async function poblarFirestore() {
       });
     }
 
-    // Agregar productos usando batch operations
-    const productosAgregados = await agregarProductosBatch(productosValidados);
+    // Procesar productos: actualizar existentes o agregar nuevos
+    let productosActualizados = 0;
+    let productosAgregados = 0;
+
+    for (const producto of productosValidados) {
+      if (productosExistentes[producto.handle]) {
+        // Actualizar producto existente
+        const existing = productosExistentes[producto.handle];
+        await updateDoc(doc(db, 'productos', existing.id), producto);
+        productosActualizados++;
+        console.log(`🔄 Actualizado: ${producto.nombre}`);
+      } else {
+        // Agregar nuevo producto
+        await addDoc(collection(db, 'productos'), producto);
+        productosAgregados++;
+        console.log(`➕ Agregado: ${producto.nombre}`);
+      }
+    }
 
     const endTime = Date.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
 
     console.log("\n🎉 ¡Proceso completado!");
     console.log(`📦 Productos agregados: ${productosAgregados}`);
+    console.log(`🔄 Productos actualizados: ${productosActualizados}`);
     console.log(`⏱️  Tiempo total: ${duration} segundos`);
-    console.log(`🚀 Rendimiento: ${(productosAgregados / (endTime - startTime) * 1000).toFixed(2)} productos/segundo`);
 
     // Mostrar resumen final
     const totalProductos = await getDocs(collection(db, "productos"));
@@ -274,9 +291,9 @@ async function poblarFirestore() {
 
     dbLogger.success({
       productosAgregados,
+      productosActualizados,
       productosInvalidos: productosInvalidos.length,
       tiempoTotal: duration,
-      rendimiento: parseFloat((productosAgregados / (endTime - startTime) * 1000).toFixed(2)),
       resumenInventario: inventorySummary
     });
 

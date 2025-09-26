@@ -11,33 +11,34 @@ export const useLazyProducts = () => {
 
   // Función para cargar todos los productos
   const loadProducts = useCallback(async () => {
-    if (loading) return;
-
     setLoading(true);
     setError(null);
 
     try {
-      const productsQuery = query(
-        collection(db, 'productos'),
-        orderBy('nombre')
-      );
-
-      const snapshot = await getDocs(productsQuery);
+      const snapshot = await getDocs(collection(db, 'productos'));
 
       const productsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      setProducts(productsData);
-      setTotalLoaded(productsData.length);
+      // Filter unique products by handle or name to avoid duplicates
+      const uniqueProducts = productsData.filter((p, index, arr) =>
+        arr.findIndex(q => q.handle && p.handle ? q.handle === p.handle : q.nombre === p.nombre) === index
+      );
+
+      // Sort alphabetically by nombre
+      uniqueProducts.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+      setProducts(uniqueProducts);
+      setTotalLoaded(uniqueProducts.length);
     } catch (err) {
       console.error('Error loading products:', err);
       setError('Error al cargar productos');
     } finally {
       setLoading(false);
     }
-  }, [loading]);
+  }, []);
 
   // Función para filtrar productos localmente (para búsqueda)
   const filterProducts = useCallback((searchTerm) => {

@@ -1,12 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
 import '../styles/Chatbot.css';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: '¡Hola! Soy el asistente de El Guante. ¿En qué puedo ayudarte?', sender: 'bot' }
+    { text: '¡Hola! Soy el asistente de El Guante 👋 ¿En qué puedo ayudarte hoy?', sender: 'bot' }
   ]);
   const [input, setInput] = useState('');
+  const [productos, setProductos] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    const fetchProductos = async () => {
+      try {
+        const q = query(collection(db, 'productos'), where('activo', '==', true));
+        const snapshot = await getDocs(q);
+        const productsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setProductos(productsData);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProductos();
+  }, []);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -16,7 +40,7 @@ const Chatbot = () => {
     if (input.trim() === '') return;
 
     const userMessage = { text: input, sender: 'user' };
-    setMessages([...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
 
     const botResponse = getBotResponse(input.toLowerCase());
     setTimeout(() => {
@@ -26,30 +50,126 @@ const Chatbot = () => {
     setInput('');
   };
 
-  const getBotResponse = (message) => {
-    if (message.includes('hola') || message.includes('buenos') || message.includes('saludos')) {
-      return '¡Hola! ¿Cómo estás? Estoy aquí para ayudarte con nuestros productos de limpieza.';
-    } else if (message.includes('productos') || message.includes('comprar') || message.includes('tienda')) {
-      return 'Puedes ver nuestros productos en la sección de Tienda. Ofrecemos detergentes, jabones y más.';
-    } else if (message.includes('carrito') || message.includes('compra')) {
-      return 'Para agregar productos al carrito, ve a la página de un producto y haz clic en "Agregar al carrito".';
-    } else if (message.includes('ayuda') || message.includes('problema')) {
-      return 'Estoy aquí para ayudarte. ¿Qué necesitas saber sobre nuestros productos o el sitio?';
-    } else if (message.includes('contacto') || message.includes('telefono') || message.includes('email')) {
-      return 'Puedes contactarnos a través de nuestro formulario en la página de inicio o por email.';
-    } else if (message.includes('envio') || message.includes('entrega')) {
-      return 'Ofrecemos envío a domicilio en toda la ciudad. Los tiempos de entrega son de 1-3 días hábiles.';
-    } else if (message.includes('pago') || message.includes('formas')) {
-      return 'Aceptamos pagos con tarjeta de crédito, débito y efectivo contra entrega.';
-    } else {
-      return 'Lo siento, no entendí tu pregunta. ¿Puedes reformularla o preguntarme sobre productos, carrito, envíos o pagos?';
-    }
-  };
-
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSend();
     }
+  };
+
+  const intents = [
+    {
+      keywords: ['hola', 'buenos', 'saludos'],
+      response: '¡Hola! 😀 ¿Cómo estás? Puedo ayudarte con productos, precios, envíos, horarios o contacto por WhatsApp.'
+    },
+    {
+      keywords: ['productos', 'catalogo', 'tienda'],
+      response: () => {
+        const lista = productos.map(p => `- ${p.nombre} ($${p.precio})`).join('\n');
+        return `Estos son algunos de nuestros productos:\n${lista}\n\nPuedes pedirme el precio de un producto específico 😉`;
+      }
+    },
+    {
+      keywords: ['precio', 'cuanto cuesta', 'costo'],
+      response: 'Por favor dime el nombre del producto y te diré el precio exacto.'
+    },
+    {
+      keywords: ['envio', 'entrega', 'costo envio'],
+      response: '🚚 Ofrecemos envío a domicilio en toda la ciudad. Envío GRATIS en compras mayores a $10.000. Envío estándar: $2.000. Entrega: 1-3 días hábiles.'
+    },
+    {
+      keywords: ['horario', 'atencion'],
+      response: '🕒 Nuestro horario de atención es:\nLunes a Viernes: 9:00 a 16:00\nSábados y feriados: 10:00 a 13:00.'
+    },
+    {
+      keywords: ['pago', 'formas', 'metodo'],
+      response: '💳 Aceptamos pagos por transferencia, tarjeta de débito, crédito o efectivo.'
+    },
+    {
+      keywords: ['devolucion', 'cambio'],
+      response: '♻️ Aceptamos devoluciones dentro de 7 días con comprobante de compra.'
+    },
+    {
+      keywords: ['contacto', 'telefono', 'email'],
+      response: '📩 Puedes contactarnos desde el formulario en nuestra web o pedirme que te derive a WhatsApp.'
+    },
+    {
+      keywords: ['whatsapp', 'humano', 'asesor', 'hablar'],
+      response: '📲 Claro, puedes contactarnos directamente en WhatsApp: https://wa.me/5492214760630'
+    },
+    {
+      keywords: ['ayuda', 'problema', 'soporte'],
+      response: 'Estoy aquí para ayudarte 🙌. Puedes preguntarme sobre productos, precios, envíos, pagos u horarios.'
+    }
+  ];
+
+  const getBotResponse = (message) => {
+    if (loadingProducts) {
+      return '🔄 Cargando productos...';
+    }
+
+    const priceKeywords = ['precio', 'cuanto', 'costo', 'cuesta'];
+
+    // Solo buscar producto si la consulta incluye palabras relacionadas con precio
+    if (priceKeywords.some(kw => message.includes(kw))) {
+      // Buscar producto específico con scoring para mejor coincidencia, priorizando nombre
+      const words = message.split(/\s+/).filter(word => word.length > 2); // Palabras de más de 2 letras
+      let bestProduct = null;
+      let bestScore = 0;
+
+      productos.forEach(p => {
+        const nombreLower = p.nombre.toLowerCase();
+        let score = 0;
+
+        words.forEach(word => {
+          const wordLower = word.toLowerCase();
+          if (nombreLower.includes(wordLower)) score += 2; // Solo match en nombre
+        });
+
+        // Bonus por coincidencia exacta o cercana en nombre
+        if (message.includes(nombreLower)) score += 3;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestProduct = p;
+        }
+      });
+
+      if (bestProduct && bestScore >= 2) { // Mínimo score para evitar falsos positivos
+        const stockInfo = bestProduct.stock > 0 ? `Stock disponible: ${bestProduct.stock}` : 'Sin stock disponible';
+        return `💡 El precio de *${bestProduct.nombre}* es **$${bestProduct.precio}**.\n${stockInfo}`;
+      }
+    }
+
+    // Buscar intent por palabras clave
+    for (let intent of intents) {
+      if (intent.keywords.some(kw => message.includes(kw))) {
+        return typeof intent.response === 'function' ? intent.response() : intent.response;
+      }
+    }
+
+    // Fallback
+    return '🤔 No entendí tu consulta. Puedo ayudarte con:\n- Productos y precios\n- Envíos\n- Horarios\n- Pagos\n- Contacto en WhatsApp\n\n¿Qué te interesa?';
+  };
+
+  const renderMessageLine = (line) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return line.split(urlRegex).map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="chatbot-link"
+            style={{ color: '#007bff', textDecoration: 'underline' }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   return (
@@ -69,7 +189,11 @@ const Chatbot = () => {
           <div className="chatbot-messages">
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.sender}`}>
-                {msg.text}
+                {msg.text.split('\n').map((line, i) => (
+                  <div key={i} className="message-line">
+                    {renderMessageLine(line)}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
