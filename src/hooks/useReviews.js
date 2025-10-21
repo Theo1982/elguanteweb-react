@@ -26,7 +26,8 @@ export const useReviews = (productId) => {
     const q = query(
       collection(db, 'reviews'),
       where('productId', '==', productId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
+      orderBy('__name__', 'desc') // Add composite index workaround
     );
 
     const unsubscribe = onSnapshot(

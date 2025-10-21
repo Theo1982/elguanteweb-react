@@ -23,7 +23,8 @@ export const useOrders = (userId) => {
     const q = query(
       collection(db, 'orders'),
       where('userId', '==', userId),
-      orderBy('timestamp', 'desc')
+      orderBy('timestamp', 'desc'),
+      orderBy('__name__', 'desc') // Add composite index workaround
     );
 
     const unsubscribe = onSnapshot(
