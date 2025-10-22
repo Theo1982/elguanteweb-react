@@ -13,7 +13,7 @@ import { validators } from './validators';
  * @param {string} input - The input string to sanitize
  * @returns {string} Sanitized string
  */
-export const sanitizeInput = (input) => {
+export const sanitizeInput = input => {
   if (typeof input !== 'string') return '';
   return DOMPurify.sanitize(input);
 };
@@ -23,9 +23,9 @@ export const sanitizeInput = (input) => {
  * @param {string} input - Input to validate
  * @returns {boolean} True if safe, false if malicious
  */
-export const isSafeInput = (input) => {
+export const isSafeInput = input => {
   if (typeof input !== 'string') return false;
-  
+
   // Common malicious patterns
   const maliciousPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
@@ -36,7 +36,7 @@ export const isSafeInput = (input) => {
     /expression\s*\(/gi,
     /SELECT|INSERT|UPDATE|DELETE/gi, // Basic SQL injection
     /UNION\s+SELECT/gi,
-    /--|\/\*|\*\/|@@|CHAR/gi
+    /--|\/\*|\*\/|@@|CHAR/gi,
   ];
 
   return !maliciousPatterns.some(pattern => pattern.test(input));
@@ -47,31 +47,38 @@ export const isSafeInput = (input) => {
  * @param {Object} productData - Product object
  * @returns {Object} { isValid: boolean, errors: array }
  */
-export const validateProductData = (productData) => {
+export const validateProductData = productData => {
   const errors = [];
-  
+
   // Required fields
   if (!productData.nombre || !isSafeInput(productData.nombre)) {
     errors.push('Nombre del producto es requerido y debe ser seguro');
   }
-  
-  if (!productData.precio || isNaN(productData.precio) || productData.precio <= 0) {
+
+  if (
+    !productData.precio ||
+    isNaN(productData.precio) ||
+    productData.precio <= 0
+  ) {
     errors.push('Precio debe ser un número positivo');
   }
-  
-  if (productData.stock !== undefined && (isNaN(productData.stock) || productData.stock < 0)) {
+
+  if (
+    productData.stock !== undefined &&
+    (isNaN(productData.stock) || productData.stock < 0)
+  ) {
     errors.push('Stock debe ser un número no negativo');
   }
-  
+
   // Sanitize optional fields
   if (productData.descripcion) {
     productData.descripcion = sanitizeInput(productData.descripcion);
   }
-  
+
   if (productData.categoria) {
     productData.categoria = sanitizeInput(productData.categoria);
   }
-  
+
   // Inventory validation
   const inventoryErrors = inventoryValidator(productData);
   errors.push(...inventoryErrors);
@@ -79,7 +86,7 @@ export const validateProductData = (productData) => {
   return {
     isValid: errors.length === 0,
     errors,
-    sanitizedData: productData
+    sanitizedData: productData,
   };
 };
 
@@ -91,7 +98,7 @@ export const validateProductData = (productData) => {
  */
 export const validateFormData = (formData, formType) => {
   const errors = [];
-  
+
   switch (formType) {
     case 'login':
       if (!formData.email || !validators.email(formData.email)) {
@@ -101,7 +108,7 @@ export const validateFormData = (formData, formType) => {
         errors.push('Contraseña debe tener al menos 6 caracteres');
       }
       break;
-    
+
     case 'register':
       if (!formData.email || !validators.email(formData.email)) {
         errors.push('Email inválido');
@@ -113,7 +120,7 @@ export const validateFormData = (formData, formType) => {
         errors.push('Las contraseñas no coinciden');
       }
       break;
-    
+
     case 'contact':
       if (!formData.message || !isSafeInput(formData.message)) {
         errors.push('Mensaje requerido y debe ser seguro');
@@ -122,7 +129,7 @@ export const validateFormData = (formData, formType) => {
         errors.push('Email inválido');
       }
       break;
-    
+
     default:
       errors.push('Tipo de formulario no reconocido');
   }
@@ -137,7 +144,7 @@ export const validateFormData = (formData, formType) => {
   return {
     isValid: errors.length === 0,
     errors,
-    sanitizedData: formData
+    sanitizedData: formData,
   };
 };
 
@@ -155,7 +162,7 @@ export const clientRateLimit = (action, limit = 5, windowMs = 60000) => {
 
   // Remove old timestamps
   const validTimestamps = timestamps.filter(ts => now - ts < windowMs);
-  
+
   if (validTimestamps.length >= limit) {
     return false;
   }
@@ -192,5 +199,5 @@ export default {
   validateFormData,
   clientRateLimit,
   hasRole,
-  generateCSRFToken
+  generateCSRFToken,
 };

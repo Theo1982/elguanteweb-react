@@ -15,13 +15,23 @@ const mockSnapshot = {
   docs: [
     {
       id: '1',
-      data: () => ({ nombre: 'Jabon Líquido', precio: 1500, stock: 10, activo: true })
+      data: () => ({
+        nombre: 'Jabon Líquido',
+        precio: 1500,
+        stock: 10,
+        activo: true,
+      }),
     },
     {
       id: '2',
-      data: () => ({ nombre: 'Detergente', precio: 2000, stock: 5, activo: true })
-    }
-  ]
+      data: () => ({
+        nombre: 'Detergente',
+        precio: 2000,
+        stock: 5,
+        activo: true,
+      }),
+    },
+  ],
 };
 
 const mockOnSnapshot = jest.fn((q, onNext, onError) => {
@@ -45,7 +55,9 @@ describe('Chatbot Component', () => {
     fireEvent.click(button);
 
     expect(screen.getByText('Asistente de El Guante')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Escribe tu mensaje...')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Escribe tu mensaje...')
+    ).toBeInTheDocument();
   });
 
   test('sends message and tracks event', async () => {
@@ -58,10 +70,16 @@ describe('Chatbot Component', () => {
     fireEvent.keyPress(input, { key: 'Enter', code: 13 });
 
     await waitFor(() => {
-      expect(mockTrackEvent).toHaveBeenCalledWith('chat_message_sent', { message: 'hola' });
+      expect(mockTrackEvent).toHaveBeenCalledWith('chat_message_sent', {
+        message: 'hola',
+      });
     });
 
-    expect(screen.getByText('¡Hola! 😀 ¿Cómo estás? Puedo ayudarte con productos, precios, envíos, horarios o contacto por WhatsApp.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '¡Hola! 😀 ¿Cómo estás? Puedo ayudarte con productos, precios, envíos, horarios o contacto por WhatsApp.'
+      )
+    ).toBeInTheDocument();
   });
 
   test('handles product price intent', async () => {
@@ -74,7 +92,9 @@ describe('Chatbot Component', () => {
     fireEvent.keyPress(input, { key: 'Enter', code: 13 });
 
     await waitFor(() => {
-      expect(screen.getByText(/El precio de Jabon Líquido es \$\d+/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/El precio de Jabon Líquido es \$\d+/)
+      ).toBeInTheDocument();
     });
   });
 
@@ -88,7 +108,11 @@ describe('Chatbot Component', () => {
     fireEvent.keyPress(input, { key: 'Enter', code: 13 });
 
     await waitFor(() => {
-      expect(screen.getByText(/Puedes ver las reseñas de un producto en su página de detalle/)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Puedes ver las reseñas de un producto en su página de detalle/
+        )
+      ).toBeInTheDocument();
     });
   });
 
@@ -115,6 +139,8 @@ describe('Chatbot Component', () => {
     const closeBtn = screen.getByText('×');
     fireEvent.click(closeBtn);
 
-    expect(screen.queryByText('Asistente de El Guante')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Asistente de El Guante')
+    ).not.toBeInTheDocument();
   });
 });

@@ -1,8 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "./AuthContext";
-import { collection, addDoc, query, where, getDocs, deleteDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
 const FavoritesContext = createContext();
 
@@ -21,11 +29,14 @@ export function FavoritesProvider({ children }) {
       }
 
       try {
-        const q = query(collection(db, "favoritos"), where("userId", "==", user.uid));
+        const q = query(
+          collection(db, 'favoritos'),
+          where('userId', '==', user.uid)
+        );
         const querySnapshot = await getDocs(q);
         const favs = querySnapshot.docs.map(doc => ({
           id: doc.data().productId,
-          ...doc.data().productData
+          ...doc.data().productData,
         }));
         setFavorites(favs);
       } catch (error) {
@@ -39,7 +50,7 @@ export function FavoritesProvider({ children }) {
     loadFavorites();
   }, [user]);
 
-  const addToFavorites = async (product) => {
+  const addToFavorites = async product => {
     if (!user || !product || !product.id) {
       console.error('Invalid user or product:', user, product);
       return;
@@ -52,7 +63,7 @@ export function FavoritesProvider({ children }) {
 
     try {
       // Add to Firestore first
-      await addDoc(collection(db, "favoritos"), {
+      await addDoc(collection(db, 'favoritos'), {
         userId: user.uid,
         productId: product.id,
         productData: {
@@ -63,7 +74,7 @@ export function FavoritesProvider({ children }) {
           categoria: product.categoria || '',
           stock: product.stock || 0,
         },
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       // Update local state after success
@@ -82,14 +93,18 @@ export function FavoritesProvider({ children }) {
     }
   };
 
-  const removeFromFavorites = async (productId) => {
+  const removeFromFavorites = async productId => {
     if (!user) return;
 
     try {
       // Find and delete from Firestore
-      const q = query(collection(db, "favoritos"), where("userId", "==", user.uid), where("productId", "==", productId));
+      const q = query(
+        collection(db, 'favoritos'),
+        where('userId', '==', user.uid),
+        where('productId', '==', productId)
+      );
       const querySnapshot = await getDocs(q);
-      querySnapshot.forEach(async (doc) => {
+      querySnapshot.forEach(async doc => {
         await deleteDoc(doc.ref);
       });
 
@@ -100,7 +115,7 @@ export function FavoritesProvider({ children }) {
     }
   };
 
-  const isFavorite = (productId) => {
+  const isFavorite = productId => {
     return favorites.some(item => item.id === productId);
   };
 
@@ -111,13 +126,15 @@ export function FavoritesProvider({ children }) {
         nombre: item.nombre,
         precio: item.precio,
         imagen: item.imagen,
-        categoria: item.categoria
+        categoria: item.categoria,
       })),
       exportedAt: new Date().toISOString(),
-      userId: user?.uid
+      userId: user?.uid,
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -147,7 +164,7 @@ export function FavoritesProvider({ children }) {
         isFavorite,
         getFavoritesCount,
         exportFavorites,
-        shareFavorites
+        shareFavorites,
       }}
     >
       {children}

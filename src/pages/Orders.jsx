@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import useToast from '../hooks/useToast';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import { Link } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -31,12 +37,15 @@ const Orders = () => {
 
     const unsubscribe = onSnapshot(
       q,
-      (snapshot) => {
-        const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      snapshot => {
+        const ordersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setOrders(ordersData);
         setLoading(false);
       },
-      (err) => {
+      err => {
         console.error('Error fetching orders:', err);
         setError(err.message);
         setLoading(false);
@@ -54,7 +63,9 @@ const Orders = () => {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2>Tus Órdenes</h2>
-        <p>No tienes órdenes aún. <Link to="/shop">Ir a la tienda</Link></p>
+        <p>
+          No tienes órdenes aún. <Link to="/shop">Ir a la tienda</Link>
+        </p>
       </div>
     );
   }
@@ -62,11 +73,33 @@ const Orders = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h2>Tus Órdenes</h2>
-      {orders.map((order) => (
-        <div key={order.id} style={{ border: '1px solid #ddd', marginBottom: '20px', padding: '15px', borderRadius: '8px' }}>
+      {orders.map(order => (
+        <div
+          key={order.id}
+          style={{
+            border: '1px solid #ddd',
+            marginBottom: '20px',
+            padding: '15px',
+            borderRadius: '8px',
+          }}
+        >
           <h3>Orden #{order.id.slice(-6)}</h3>
-          <p>Fecha: {order.timestamp?.toDate ? order.timestamp.toDate().toLocaleDateString() : 'Reciente'}</p>
-          <p>Estado: <span style={{ color: order.status === 'completed' ? 'green' : 'orange' }}>{order.status}</span></p>
+          <p>
+            Fecha:{' '}
+            {order.timestamp?.toDate
+              ? order.timestamp.toDate().toLocaleDateString()
+              : 'Reciente'}
+          </p>
+          <p>
+            Estado:{' '}
+            <span
+              style={{
+                color: order.status === 'completed' ? 'green' : 'orange',
+              }}
+            >
+              {order.status}
+            </span>
+          </p>
           <p>Total: ${order.total}</p>
           <p>Puntos Ganados: {order.pointsEarned}</p>
           <h4>Productos:</h4>
@@ -75,7 +108,10 @@ const Orders = () => {
               <li key={index}>
                 {item.nombre} x{item.quantity} - ${item.precio}
                 {order.productIds && (
-                  <Link to={`/product/${order.productIds[index]}`}> Ver Producto</Link>
+                  <Link to={`/product/${order.productIds[index]}`}>
+                    {' '}
+                    Ver Producto
+                  </Link>
                 )}
               </li>
             ))}

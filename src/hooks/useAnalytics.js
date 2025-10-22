@@ -11,7 +11,7 @@ export const loadAnalytics = () => {
     document.head.appendChild(script);
 
     window.dataLayer = window.dataLayer || [];
-    gtag = function() {
+    gtag = function () {
       window.dataLayer.push(arguments);
     };
     window.gtag = gtag;
@@ -22,7 +22,7 @@ export const loadAnalytics = () => {
 };
 
 export const useAnalytics = () => {
-  const trackPageView = (path) => {
+  const trackPageView = path => {
     if (gtag) {
       gtag('event', 'page_view', {
         page_title: document.title,
@@ -53,42 +53,46 @@ export const useAnalytics = () => {
 };
 
 // E-commerce events
-export const trackAddToCart = (product) => {
+export const trackAddToCart = product => {
   if (gtag) {
     gtag('event', 'add_to_cart', {
       currency: 'ARS',
       value: product.precio,
-      items: [{
-        item_id: product.id,
-        item_name: product.nombre,
-        item_category: product.categoria,
-        price: product.precio,
-        quantity: 1
-      }]
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.nombre,
+          item_category: product.categoria,
+          price: product.precio,
+          quantity: 1,
+        },
+      ],
     });
   }
 };
 
-export const trackPurchase = (order) => {
+export const trackPurchase = order => {
   if (gtag) {
     gtag('event', 'purchase', {
       transaction_id: order.id,
       value: order.total,
       currency: 'ARS',
-      items: order.items
+      items: order.items,
     });
   }
 };
 
-export const trackViewItem = (product) => {
+export const trackViewItem = product => {
   if (gtag) {
     gtag('event', 'view_item', {
-      items: [{
-        item_id: product.id,
-        item_name: product.nombre,
-        item_category: product.categoria,
-        price: product.precio
-      }]
+      items: [
+        {
+          item_id: product.id,
+          item_name: product.nombre,
+          item_category: product.categoria,
+          price: product.precio,
+        },
+      ],
     });
   }
 };

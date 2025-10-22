@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, limit, getDocs } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  limit,
+  getDocs,
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import Reviews from '../components/Reviews';
@@ -26,7 +34,7 @@ const ProductDetail = () => {
         const productSnap = await getDoc(productRef);
         if (productSnap.exists()) {
           setProduct({ id: productSnap.id, ...productSnap.data() });
-          
+
           // Fetch related products
           if (productSnap.data().categoria) {
             const relatedQuery = query(
@@ -36,7 +44,10 @@ const ProductDetail = () => {
               limit(4)
             );
             const relatedSnap = await getDocs(relatedQuery);
-            const relatedData = relatedSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const relatedData = relatedSnap.docs.map(d => ({
+              id: d.id,
+              ...d.data(),
+            }));
             setRelatedProducts(relatedData);
           }
         } else {
@@ -77,25 +88,28 @@ const ProductDetail = () => {
   return (
     <div className="product-detail-container">
       <div className="product-detail-main">
-        <div 
+        <div
           className="product-image-container"
           onMouseEnter={() => setImageZoom(true)}
           onMouseLeave={() => setImageZoom(false)}
         >
-          <LazyImage 
-            src={product.imagen} 
+          <LazyImage
+            src={product.imagen}
             alt={product.nombre}
             className={`product-detail-image ${imageZoom ? 'zoomed' : ''}`}
-            style={{ 
+            style={{
               transform: imageZoom ? 'scale(1.1)' : 'scale(1)',
-              transition: 'transform 0.3s ease'
+              transition: 'transform 0.3s ease',
             }}
           />
         </div>
         <div className="product-detail-info">
           <h1>{product.nombre}</h1>
           <p className="product-price">{formatPrice(product.precio)}</p>
-          <p className="product-stock">Stock: {product.stock > 0 ? `${product.stock} unidades` : 'Sin stock'}</p>
+          <p className="product-stock">
+            Stock:{' '}
+            {product.stock > 0 ? `${product.stock} unidades` : 'Sin stock'}
+          </p>
           {product.fragancias && (
             <div className="product-variants">
               <h3>Fragancias disponibles:</h3>
@@ -107,8 +121,8 @@ const ProductDetail = () => {
             </div>
           )}
           <p className="product-description">{product.descripcion}</p>
-          <button 
-            onClick={handleAddToCart} 
+          <button
+            onClick={handleAddToCart}
             disabled={product.stock <= 0}
             className="add-to-cart-btn"
           >
@@ -123,9 +137,13 @@ const ProductDetail = () => {
         <div className="related-products">
           <h2>Productos Relacionados</h2>
           <div className="related-grid">
-            {relatedProducts.map((rel) => (
+            {relatedProducts.map(rel => (
               <div key={rel.id} className="related-card">
-                <LazyImage src={rel.imagen} alt={rel.nombre} className="related-image" />
+                <LazyImage
+                  src={rel.imagen}
+                  alt={rel.nombre}
+                  className="related-image"
+                />
                 <h3>{rel.nombre}</h3>
                 <p>{formatPrice(rel.precio)}</p>
               </div>
@@ -134,7 +152,7 @@ const ProductDetail = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .product-detail-container {
           max-width: 1200px;
           margin: 0 auto;

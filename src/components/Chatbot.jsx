@@ -7,7 +7,10 @@ import '../styles/Chatbot.css';
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: '¡Hola! Soy el asistente de El Guante 👋 ¿En qué puedo ayudarte hoy?', sender: 'bot' }
+    {
+      text: '¡Hola! Soy el asistente de El Guante 👋 ¿En qué puedo ayudarte hoy?',
+      sender: 'bot',
+    },
   ]);
   const [input, setInput] = useState('');
   const [productos, setProductos] = useState([]);
@@ -19,17 +22,17 @@ const Chatbot = () => {
 
     const unsubscribe = onSnapshot(
       q,
-      (snapshot) => {
+      snapshot => {
         const productsData = snapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
         setProductos(productsData);
         setLoadingProducts(false);
         // Cache for offline
         localStorage.setItem('products', JSON.stringify(productsData));
       },
-      (error) => {
+      error => {
         console.error('Error fetching products:', error);
         setLoadingProducts(false);
         // Offline fallback
@@ -62,7 +65,7 @@ const Chatbot = () => {
     setInput('');
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = e => {
     if (e.key === 'Enter') {
       handleSend();
     }
@@ -71,62 +74,76 @@ const Chatbot = () => {
   const intents = [
     {
       keywords: ['hola', 'buenos', 'saludos'],
-      response: '¡Hola! 😀 ¿Cómo estás? Puedo ayudarte con productos, precios, envíos, horarios o contacto por WhatsApp.'
+      response:
+        '¡Hola! 😀 ¿Cómo estás? Puedo ayudarte con productos, precios, envíos, horarios o contacto por WhatsApp.',
     },
     {
       keywords: ['productos', 'catalogo', 'tienda'],
       response: () => {
-        const lista = productos.map(p => `- ${p.nombre} ($${p.precio})`).join('\n');
+        const lista = productos
+          .map(p => `- ${p.nombre} ($${p.precio})`)
+          .join('\n');
         return `Estos son algunos de nuestros productos:\n${lista}\n\nPuedes pedirme el precio de un producto específico 😉`;
-      }
+      },
     },
     {
       keywords: ['precio', 'cuanto cuesta', 'costo'],
-      response: 'Por favor dime el nombre del producto y te diré el precio exacto.'
+      response:
+        'Por favor dime el nombre del producto y te diré el precio exacto.',
     },
     {
       keywords: ['reseñas', 'opiniones', 'reviews'],
-      response: '⭐ Puedes ver las reseñas de un producto en su página de detalle. Visita /product/[id] para ver opiniones de otros clientes.'
+      response:
+        '⭐ Puedes ver las reseñas de un producto en su página de detalle. Visita /product/[id] para ver opiniones de otros clientes.',
     },
     {
       keywords: ['comparar', 'comparacion'],
-      response: '🔄 Para comparar productos, usa la página de comparación: /compare/handle1/handle2. Dime dos nombres de productos para ayudarte.'
+      response:
+        '🔄 Para comparar productos, usa la página de comparación: /compare/handle1/handle2. Dime dos nombres de productos para ayudarte.',
     },
     {
       keywords: ['nivel', 'puntos', 'descuento'],
-      response: '📈 Tu nivel de usuario determina descuentos. Revisa tu perfil en /profile para ver tu nivel actual y puntos acumulados.'
+      response:
+        '📈 Tu nivel de usuario determina descuentos. Revisa tu perfil en /profile para ver tu nivel actual y puntos acumulados.',
     },
     {
       keywords: ['envio', 'entrega', 'costo envio'],
-      response: '🚚 Ofrecemos envío a domicilio en toda la ciudad. Envío GRATIS en compras mayores a $10.000. Envío estándar: $2.000. Entrega: 1-3 días hábiles.'
+      response:
+        '🚚 Ofrecemos envío a domicilio en toda la ciudad. Envío GRATIS en compras mayores a $10.000. Envío estándar: $2.000. Entrega: 1-3 días hábiles.',
     },
     {
       keywords: ['horario', 'atencion'],
-      response: '🕒 Nuestro horario de atención es:\nLunes a Viernes: 9:00 a 16:00\nSábados y feriados: 10:00 a 13:00.'
+      response:
+        '🕒 Nuestro horario de atención es:\nLunes a Viernes: 9:00 a 16:00\nSábados y feriados: 10:00 a 13:00.',
     },
     {
       keywords: ['pago', 'formas', 'metodo'],
-      response: '💳 Aceptamos pagos por transferencia, tarjeta de débito, crédito o efectivo.'
+      response:
+        '💳 Aceptamos pagos por transferencia, tarjeta de débito, crédito o efectivo.',
     },
     {
       keywords: ['devolucion', 'cambio'],
-      response: '♻️ Aceptamos devoluciones dentro de 7 días con comprobante de compra.'
+      response:
+        '♻️ Aceptamos devoluciones dentro de 7 días con comprobante de compra.',
     },
     {
       keywords: ['contacto', 'telefono', 'email'],
-      response: '📩 Puedes contactarnos desde el formulario en nuestra web o pedirme que te derive a WhatsApp.'
+      response:
+        '📩 Puedes contactarnos desde el formulario en nuestra web o pedirme que te derive a WhatsApp.',
     },
     {
       keywords: ['whatsapp', 'humano', 'asesor', 'hablar'],
-      response: '📲 Claro, puedes contactarnos directamente en WhatsApp: https://wa.me/5492214760630'
+      response:
+        '📲 Claro, puedes contactarnos directamente en WhatsApp: https://wa.me/5492214760630',
     },
     {
       keywords: ['ayuda', 'problema', 'soporte'],
-      response: 'Estoy aquí para ayudarte 🙌. Puedes preguntarme sobre productos, precios, envíos, pagos u horarios.'
-    }
+      response:
+        'Estoy aquí para ayudarte 🙌. Puedes preguntarme sobre productos, precios, envíos, pagos u horarios.',
+    },
   ];
 
-  const getBotResponse = (message) => {
+  const getBotResponse = message => {
     if (loadingProducts) {
       return '🔄 Cargando productos...';
     }
@@ -158,8 +175,12 @@ const Chatbot = () => {
         }
       });
 
-      if (bestProduct && bestScore >= 2) { // Mínimo score para evitar falsos positivos
-        const stockInfo = bestProduct.stock > 0 ? `Stock disponible: ${bestProduct.stock}` : 'Sin stock disponible';
+      if (bestProduct && bestScore >= 2) {
+        // Mínimo score para evitar falsos positivos
+        const stockInfo =
+          bestProduct.stock > 0
+            ? `Stock disponible: ${bestProduct.stock}`
+            : 'Sin stock disponible';
         return `💡 El precio de *${bestProduct.nombre}* es **$${bestProduct.precio}**.\n${stockInfo}`;
       }
     }
@@ -167,7 +188,9 @@ const Chatbot = () => {
     // Buscar intent por palabras clave
     for (let intent of intents) {
       if (intent.keywords.some(kw => message.includes(kw))) {
-        return typeof intent.response === 'function' ? intent.response() : intent.response;
+        return typeof intent.response === 'function'
+          ? intent.response()
+          : intent.response;
       }
     }
 
@@ -175,7 +198,7 @@ const Chatbot = () => {
     return '🤔 No entendí tu consulta. Puedo ayudarte con:\n- Productos y precios\n- Envíos\n- Horarios\n- Pagos\n- Contacto en WhatsApp\n\n¿Qué te interesa?';
   };
 
-  const renderMessageLine = (line) => {
+  const renderMessageLine = line => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return line.split(urlRegex).map((part, i) => {
       if (part.match(urlRegex)) {
@@ -208,7 +231,9 @@ const Chatbot = () => {
         <div className="chatbot-window">
           <div className="chatbot-header">
             <span>Asistente de El Guante</span>
-            <button className="chatbot-close" onClick={toggleChat}>×</button>
+            <button className="chatbot-close" onClick={toggleChat}>
+              ×
+            </button>
           </div>
           <div className="chatbot-messages">
             {messages.map((msg, index) => (
@@ -225,12 +250,14 @@ const Chatbot = () => {
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={e => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Escribe tu mensaje..."
               className="chatbot-input"
             />
-            <button onClick={handleSend} className="chatbot-send">Enviar</button>
+            <button onClick={handleSend} className="chatbot-send">
+              Enviar
+            </button>
           </div>
         </div>
       )}

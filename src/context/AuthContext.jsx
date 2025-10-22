@@ -1,5 +1,5 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -7,11 +7,17 @@ import {
   onAuthStateChanged,
   updateProfile,
   sendPasswordResetEmail,
-  sendEmailVerification
-} from "firebase/auth";
-import { auth } from "../firebase";
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
+  sendEmailVerification,
+} from 'firebase/auth';
+import { auth } from '../firebase';
+import {
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -25,31 +31,31 @@ export function AuthProvider({ children }) {
   const clearError = () => setError(null);
 
   // Registrar usuario (email/password)
-  const signup = async (email, password, displayName = "") => {
+  const signup = async (email, password, displayName = '') => {
     try {
       setError(null);
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      
+
       if (displayName) {
         await updateProfile(cred.user, { displayName });
       }
-      
+
       // Crear documento en Firestore (usuarios) con role por defecto
-      await setDoc(doc(db, "usuarios", cred.user.uid), {
-        nombre: displayName || "",
+      await setDoc(doc(db, 'usuarios', cred.user.uid), {
+        nombre: displayName || '',
         email,
-        role: "usuario",
+        role: 'usuario',
         creado: serverTimestamp(),
         ultimoAcceso: serverTimestamp(),
         emailVerificado: false,
-        activo: true
+        activo: true,
       });
 
       // Enviar email de verificación
       if (cred.user) {
         await sendEmailVerification(cred.user);
       }
-      
+
       return cred;
     } catch (error) {
       setError(error);
@@ -64,12 +70,12 @@ export function AuthProvider({ children }) {
       setError(null);
       const result = await signInWithEmailAndPassword(auth, email, password);
       console.log('✅ Login successful for user:', result.user.uid);
-      
+
       // Actualizar último acceso
       if (result.user) {
         await updateLastAccess(result.user.uid);
       }
-      
+
       return result;
     } catch (error) {
       console.error('❌ Login error:', error.code, error.message);
@@ -90,7 +96,7 @@ export function AuthProvider({ children }) {
   };
 
   // Recuperar contraseña
-  const resetPassword = async (email) => {
+  const resetPassword = async email => {
     try {
       setError(null);
       await sendPasswordResetEmail(auth, email);
@@ -101,64 +107,64 @@ export function AuthProvider({ children }) {
   };
 
   // Actualizar último acceso
-  const updateLastAccess = async (uid) => {
+  const updateLastAccess = async uid => {
     try {
-      const userRef = doc(db, "usuarios", uid);
+      const userRef = doc(db, 'usuarios', uid);
       await updateDoc(userRef, {
-        ultimoAcceso: serverTimestamp()
+        ultimoAcceso: serverTimestamp(),
       });
     } catch (error) {
-      console.error("Error updating last access:", error);
+      console.error('Error updating last access:', error);
     }
   };
 
   // Cargar profile extra desde Firestore
-  const loadProfile = async (uid) => {
+  const loadProfile = async uid => {
     try {
-      const docRef = doc(db, "usuarios", uid);
+      const docRef = doc(db, 'usuarios', uid);
       const snap = await getDoc(docRef);
-      
+
       if (snap.exists()) {
         const profileData = { id: snap.id, ...snap.data() };
         setProfile(profileData);
-        
+
         // Actualizar último acceso
         await updateLastAccess(uid);
       } else {
         // Si no existe, crear con role 'usuario' por defecto
         const newProfileData = {
-          role: "usuario",
+          role: 'usuario',
           creado: serverTimestamp(),
           ultimoAcceso: serverTimestamp(),
-          email: auth.currentUser?.email || "",
-          nombre: auth.currentUser?.displayName || "",
+          email: auth.currentUser?.email || '',
+          nombre: auth.currentUser?.displayName || '',
           emailVerificado: auth.currentUser?.emailVerified || false,
-          activo: true
+          activo: true,
         };
-        
+
         await setDoc(docRef, newProfileData, { merge: true });
-        
+
         const newSnap = await getDoc(docRef);
         setProfile({ id: newSnap.id, ...newSnap.data() });
       }
     } catch (error) {
-      console.error("Error loading profile:", error);
+      console.error('Error loading profile:', error);
       setError(error);
     }
   };
 
   // Actualizar perfil
-  const updateUserProfile = async (updates) => {
+  const updateUserProfile = async updates => {
     try {
       setError(null);
-      if (!user) throw new Error("No user logged in");
-      
-      const userRef = doc(db, "usuarios", user.uid);
+      if (!user) throw new Error('No user logged in');
+
+      const userRef = doc(db, 'usuarios', user.uid);
       await updateDoc(userRef, {
         ...updates,
-        ultimaActualizacion: serverTimestamp()
+        ultimaActualizacion: serverTimestamp(),
       });
-      
+
       // Recargar perfil
       await loadProfile(user.uid);
     } catch (error) {
@@ -169,7 +175,7 @@ export function AuthProvider({ children }) {
 
   // Verificar si el usuario es admin
   const isAdmin = () => {
-    return profile?.role === "admin";
+    return profile?.role === 'admin';
   };
 
   // Verificar si el usuario está autenticado
@@ -178,7 +184,7 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsub = onAuthStateChanged(auth, async u => {
       setUser(u);
       if (u) {
         await loadProfile(u.uid);
@@ -203,14 +209,10 @@ export function AuthProvider({ children }) {
     updateUserProfile,
     isAdmin,
     isAuthenticated,
-    clearError
+    clearError,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

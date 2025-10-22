@@ -30,14 +30,14 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px'
+      gap: '8px',
     };
 
     const typeStyles = {
       success: { backgroundColor: '#10b981' },
       error: { backgroundColor: '#ef4444' },
       warning: { backgroundColor: '#f59e0b' },
-      info: { backgroundColor: '#3b82f6' }
+      info: { backgroundColor: '#3b82f6' },
     };
 
     return { ...baseStyles, ...typeStyles[type] };
@@ -48,7 +48,7 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
       success: '✅',
       error: '❌',
       warning: '⚠️',
-      info: 'ℹ️'
+      info: 'ℹ️',
     };
     return icons[type];
   };
@@ -71,7 +71,7 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
           cursor: 'pointer',
           fontSize: '16px',
           padding: '0',
-          marginLeft: '8px'
+          marginLeft: '8px',
         }}
       >
         ×

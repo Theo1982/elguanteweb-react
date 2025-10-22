@@ -20,28 +20,42 @@ export const useLazyProducts = () => {
 
       if (snapshot.empty) {
         console.log('Firestore collection is empty, using local fallback');
-      // Fallback to local JSON
+        // Fallback to local JSON
         const localData = await import('../data/productos.json');
         const rawProducts = localData.default;
 
         // Normalize field names to match Firestore structure
         const productsData = rawProducts.map(product => ({
-          id: product.Handle || product.REF || Math.random().toString(36).substr(2, 9),
+          id:
+            product.Handle ||
+            product.REF ||
+            Math.random().toString(36).substr(2, 9),
           nombre: product.Nombre || product.nombre,
           categoria: product.Categoria || product.categoria,
-          precio: parseFloat((product["Precio [El Guante]"] || product.precio || '0').replace(/[^\d.]/g, '')),
+          precio: parseFloat(
+            (product['Precio [El Guante]'] || product.precio || '0').replace(
+              /[^\d.]/g,
+              ''
+            )
+          ),
           descripcion: product.Descripción || product.descripcion || '',
           imagen: product.imagen || '',
-          stock: product["En inventario [El Guante]"] ? parseFloat(product["En inventario [El Guante]"]) : undefined,
+          stock: product['En inventario [El Guante]']
+            ? parseFloat(product['En inventario [El Guante]'])
+            : undefined,
           handle: product.Handle || product.handle,
-          variantes: product.Variantes || product.variantes || []
+          variantes: product.Variantes || product.variantes || [],
         }));
 
         // Deduplicate by nombre (keep first occurrence)
-        const uniqueProducts = productsData.filter((p, index, arr) => arr.findIndex(q => q.nombre === p.nombre) === index);
+        const uniqueProducts = productsData.filter(
+          (p, index, arr) => arr.findIndex(q => q.nombre === p.nombre) === index
+        );
 
         // Sort alphabetically by nombre (safe for null/undefined)
-        const sortedProducts = uniqueProducts.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        const sortedProducts = uniqueProducts.sort((a, b) =>
+          (a.nombre || '').localeCompare(b.nombre || '')
+        );
 
         setProducts(sortedProducts);
         setTotalLoaded(sortedProducts.length);
@@ -50,14 +64,18 @@ export const useLazyProducts = () => {
 
       const productsData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
 
       // Deduplicate by nombre (keep first occurrence)
-      const uniqueProducts = productsData.filter((p, index, arr) => arr.findIndex(q => q.nombre === p.nombre) === index);
+      const uniqueProducts = productsData.filter(
+        (p, index, arr) => arr.findIndex(q => q.nombre === p.nombre) === index
+      );
 
       // Sort alphabetically by nombre (safe for null/undefined)
-      const sortedProducts = uniqueProducts.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      const sortedProducts = uniqueProducts.sort((a, b) =>
+        (a.nombre || '').localeCompare(b.nombre || '')
+      );
 
       setProducts(sortedProducts);
       setTotalLoaded(sortedProducts.length);
@@ -72,22 +90,36 @@ export const useLazyProducts = () => {
 
         // Normalize field names to match Firestore structure
         const productsData = rawProducts.map(product => ({
-          id: product.Handle || product.REF || Math.random().toString(36).substr(2, 9),
+          id:
+            product.Handle ||
+            product.REF ||
+            Math.random().toString(36).substr(2, 9),
           nombre: product.Nombre || product.nombre,
           categoria: product.Categoria || product.categoria,
-          precio: parseFloat((product["Precio [El Guante]"] || product.precio || '0').replace(/[^\d.]/g, '')),
+          precio: parseFloat(
+            (product['Precio [El Guante]'] || product.precio || '0').replace(
+              /[^\d.]/g,
+              ''
+            )
+          ),
           descripcion: product.Descripción || product.descripcion || '',
           imagen: product.imagen || '',
-          stock: product["En inventario [El Guante]"] ? parseFloat(product["En inventario [El Guante]"]) : undefined,
+          stock: product['En inventario [El Guante]']
+            ? parseFloat(product['En inventario [El Guante]'])
+            : undefined,
           handle: product.Handle || product.handle,
-          variantes: product.Variantes || product.variantes || []
+          variantes: product.Variantes || product.variantes || [],
         }));
 
         // Deduplicate by nombre (keep first occurrence)
-        const uniqueProducts = productsData.filter((p, index, arr) => arr.findIndex(q => q.nombre === p.nombre) === index);
+        const uniqueProducts = productsData.filter(
+          (p, index, arr) => arr.findIndex(q => q.nombre === p.nombre) === index
+        );
 
         // Sort alphabetically by nombre (safe for null/undefined)
-        const sortedProducts = uniqueProducts.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        const sortedProducts = uniqueProducts.sort((a, b) =>
+          (a.nombre || '').localeCompare(b.nombre || '')
+        );
 
         setProducts(sortedProducts);
         setTotalLoaded(sortedProducts.length);
@@ -101,18 +133,22 @@ export const useLazyProducts = () => {
   }, []);
 
   // Función para filtrar productos localmente (para búsqueda)
-  const filterProducts = useCallback((searchTerm) => {
-    if (!searchTerm.trim()) {
-      return products;
-    }
+  const filterProducts = useCallback(
+    searchTerm => {
+      if (!searchTerm.trim()) {
+        return products;
+      }
 
-    const term = searchTerm.toLowerCase();
-    return products.filter(product =>
-      product.nombre?.toLowerCase().includes(term) ||
-      product.categoria?.toLowerCase().includes(term) ||
-      product.descripcion?.toLowerCase().includes(term)
-    );
-  }, [products]);
+      const term = searchTerm.toLowerCase();
+      return products.filter(
+        product =>
+          product.nombre?.toLowerCase().includes(term) ||
+          product.categoria?.toLowerCase().includes(term) ||
+          product.descripcion?.toLowerCase().includes(term)
+      );
+    },
+    [products]
+  );
 
   // Función para refrescar productos (útil después de cambios)
   const refreshProducts = useCallback(async () => {
@@ -130,6 +166,6 @@ export const useLazyProducts = () => {
     error,
     totalLoaded,
     filterProducts,
-    refreshProducts
+    refreshProducts,
   };
 };

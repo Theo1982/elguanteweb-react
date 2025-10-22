@@ -1,5 +1,11 @@
 // src/utils/imageOptimizer.js
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage';
 import { app } from '../firebase';
 
 const storage = getStorage(app);
@@ -10,25 +16,25 @@ const OPTIMIZATION_CONFIG = {
   webp: {
     quality: 0.8,
     maxWidth: 800,
-    maxHeight: 800
+    maxHeight: 800,
   },
   jpeg: {
     quality: 0.85,
     maxWidth: 800,
-    maxHeight: 800
+    maxHeight: 800,
   },
   png: {
     quality: 0.9,
     maxWidth: 800,
-    maxHeight: 800
+    maxHeight: 800,
   },
 
   // Tamaños para diferentes usos
   sizes: {
     thumbnail: { width: 150, height: 150 },
     medium: { width: 400, height: 400 },
-    large: { width: 800, height: 800 }
-  }
+    large: { width: 800, height: 800 },
+  },
 };
 
 // Función para comprimir imagen usando Canvas API
@@ -62,7 +68,7 @@ export const compressImage = async (file, options = {}) => {
       ctx.drawImage(img, 0, 0, width, height);
 
       canvas.toBlob(
-        (blob) => {
+        blob => {
           resolve(blob);
         },
         'image/webp',
@@ -79,11 +85,11 @@ export const compressImage = async (file, options = {}) => {
 };
 
 // Función para convertir imagen a WebP
-export const convertToWebP = async (file) => {
+export const convertToWebP = async file => {
   try {
     const compressedBlob = await compressImage(file, OPTIMIZATION_CONFIG.webp);
     return new File([compressedBlob], file.name.replace(/\.[^/.]+$/, '.webp'), {
-      type: 'image/webp'
+      type: 'image/webp',
     });
   } catch (error) {
     console.error('Error convirtiendo a WebP:', error);
@@ -92,14 +98,16 @@ export const convertToWebP = async (file) => {
 };
 
 // Función para generar múltiples tamaños de imagen
-export const generateImageSizes = async (file) => {
+export const generateImageSizes = async file => {
   const sizes = {};
 
-  for (const [sizeName, dimensions] of Object.entries(OPTIMIZATION_CONFIG.sizes)) {
+  for (const [sizeName, dimensions] of Object.entries(
+    OPTIMIZATION_CONFIG.sizes
+  )) {
     try {
       const compressedBlob = await compressImage(file, {
         ...dimensions,
-        quality: OPTIMIZATION_CONFIG.webp.quality
+        quality: OPTIMIZATION_CONFIG.webp.quality,
       });
 
       sizes[sizeName] = new File(
@@ -140,7 +148,7 @@ export const uploadOptimizedImage = async (file, path = 'products/') => {
       url: downloadURL,
       size: optimizedFile.size,
       type: optimizedFile.type,
-      uploadedAt: new Date().toISOString()
+      uploadedAt: new Date().toISOString(),
     };
   } catch (error) {
     console.error('Error subiendo imagen optimizada:', error);
@@ -155,7 +163,10 @@ export const uploadImageSizes = async (file, path = 'products/') => {
     const uploadedSizes = {};
 
     for (const [sizeName, sizeFile] of Object.entries(sizes)) {
-      const uploadResult = await uploadOptimizedImage(sizeFile, `${path}sizes/`);
+      const uploadResult = await uploadOptimizedImage(
+        sizeFile,
+        `${path}sizes/`
+      );
       uploadedSizes[sizeName] = uploadResult;
     }
 
@@ -167,7 +178,7 @@ export const uploadImageSizes = async (file, path = 'products/') => {
 };
 
 // Función para eliminar imagen de Firebase Storage
-export const deleteImage = async (path) => {
+export const deleteImage = async path => {
   try {
     const imageRef = ref(storage, path);
     await deleteObject(imageRef);
@@ -179,17 +190,17 @@ export const deleteImage = async (path) => {
 };
 
 // Función para obtener información de imagen
-export const getImageInfo = (file) => {
+export const getImageInfo = file => {
   return {
     name: file.name,
     size: file.size,
     type: file.type,
-    lastModified: new Date(file.lastModified).toISOString()
+    lastModified: new Date(file.lastModified).toISOString(),
   };
 };
 
 // Función para validar imagen
-export const validateImage = (file) => {
+export const validateImage = file => {
   const errors = [];
   const maxSize = 5 * 1024 * 1024; // 5MB
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -204,17 +215,13 @@ export const validateImage = (file) => {
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
 // Función principal para optimizar y subir imagen
 export const optimizeAndUploadImage = async (file, options = {}) => {
-  const {
-    path = 'products/',
-    generateSizes = false,
-    onProgress
-  } = options;
+  const { path = 'products/', generateSizes = false, onProgress } = options;
 
   try {
     // Validar imagen
@@ -247,9 +254,8 @@ export const optimizeAndUploadImage = async (file, options = {}) => {
       main: uploadResult,
       sizes: sizesResult,
       originalInfo: getImageInfo(file),
-      optimizedInfo: getImageInfo(optimizedFile)
+      optimizedInfo: getImageInfo(optimizedFile),
     };
-
   } catch (error) {
     onProgress && onProgress({ status: 'error', error: error.message });
     throw error;

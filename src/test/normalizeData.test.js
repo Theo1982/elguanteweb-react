@@ -4,22 +4,22 @@ import {
   normalizarPrecio,
   normalizarStock,
   normalizarTexto,
-  validarProductoNormalizado
+  validarProductoNormalizado,
 } from '../../scripts/normalizeData.js';
 
 // Mock fs module
 vi.mock('fs', () => ({
   default: {
     readFileSync: vi.fn(),
-    writeFileSync: vi.fn()
-  }
+    writeFileSync: vi.fn(),
+  },
 }));
 
 // Mock path module
 vi.mock('path', () => ({
   default: {
-    join: vi.fn((...args) => args.join('/'))
-  }
+    join: vi.fn((...args) => args.join('/')),
+  },
 }));
 
 describe('normalizeData utilities', () => {
@@ -87,7 +87,7 @@ describe('normalizeData utilities', () => {
         nombre: 'Producto de Prueba',
         precio: 100,
         stock: 10,
-        categoria: 'Electrónicos'
+        categoria: 'Electrónicos',
       };
 
       const errors = validarProductoNormalizado(validProduct);
@@ -99,7 +99,7 @@ describe('normalizeData utilities', () => {
         nombre: '',
         precio: 100,
         stock: 10,
-        categoria: 'Electrónicos'
+        categoria: 'Electrónicos',
       };
 
       const errors = validarProductoNormalizado(invalidProduct);
@@ -111,7 +111,7 @@ describe('normalizeData utilities', () => {
         nombre: 'Producto',
         precio: 0,
         stock: 10,
-        categoria: 'Electrónicos'
+        categoria: 'Electrónicos',
       };
 
       const errors = validarProductoNormalizado(invalidProduct);
@@ -123,7 +123,7 @@ describe('normalizeData utilities', () => {
         nombre: 'Producto',
         precio: 100,
         stock: -5,
-        categoria: 'Electrónicos'
+        categoria: 'Electrónicos',
       };
 
       const errors = validarProductoNormalizado(invalidProduct);
@@ -135,7 +135,7 @@ describe('normalizeData utilities', () => {
         nombre: 'Producto',
         precio: 100,
         stock: 10,
-        categoria: ''
+        categoria: '',
       };
 
       const errors = validarProductoNormalizado(invalidProduct);
@@ -147,7 +147,7 @@ describe('normalizeData utilities', () => {
         nombre: '',
         precio: -10,
         stock: -5,
-        categoria: ''
+        categoria: '',
       };
 
       const errors = validarProductoNormalizado(invalidProduct);
@@ -164,12 +164,12 @@ describe('Data normalization integration', () => {
   it('should handle complete product normalization workflow', () => {
     // Simular datos de entrada crudos
     const rawProduct = {
-      'Nombre': '  Producto de Prueba  ',
+      Nombre: '  Producto de Prueba  ',
       'Precio [El Guante]': '$1,500.50',
       'En inventario [El Guante]': '  25  ',
-      'Categoria': 'Electrónicos',
-      'Descripción': 'Descripción de prueba',
-      'imagen': '  /img/test.jpg  '
+      Categoria: 'Electrónicos',
+      Descripción: 'Descripción de prueba',
+      imagen: '  /img/test.jpg  ',
     };
 
     // Aplicar normalización
@@ -179,7 +179,7 @@ describe('Data normalization integration', () => {
       stock: normalizarStock(rawProduct['En inventario [El Guante]']),
       categoria: normalizarTexto(rawProduct['Categoria']),
       descripcion: normalizarTexto(rawProduct['Descripción']),
-      imagen: normalizarTexto(rawProduct['imagen'])
+      imagen: normalizarTexto(rawProduct['imagen']),
     };
 
     // Verificar resultado
@@ -197,12 +197,12 @@ describe('Data normalization integration', () => {
 
   it('should handle edge cases in normalization', () => {
     const edgeCaseProduct = {
-      'Nombre': null,
+      Nombre: null,
       'Precio [El Guante]': '',
       'En inventario [El Guante]': 'abc',
-      'Categoria': undefined,
-      'Descripción': '   ',
-      'imagen': null
+      Categoria: undefined,
+      Descripción: '   ',
+      imagen: null,
     };
 
     const normalizedProduct = {
@@ -211,7 +211,7 @@ describe('Data normalization integration', () => {
       stock: normalizarStock(edgeCaseProduct['En inventario [El Guante]']),
       categoria: normalizarTexto(edgeCaseProduct['Categoria']),
       descripcion: normalizarTexto(edgeCaseProduct['Descripción']),
-      imagen: normalizarTexto(edgeCaseProduct['imagen'])
+      imagen: normalizarTexto(edgeCaseProduct['imagen']),
     };
 
     expect(normalizedProduct.nombre).toBe('');

@@ -12,12 +12,16 @@ jest.mock('../../hooks/useToast');
 jest.mock('../../hooks/useReviews');
 jest.mock('../../firebase');
 
-const mockUser = { uid: 'test-user', displayName: 'Test User', email: 'test@example.com' };
+const mockUser = {
+  uid: 'test-user',
+  displayName: 'Test User',
+  email: 'test@example.com',
+};
 const mockAddToast = jest.fn();
 const mockAddReview = jest.fn();
 const mockReviews = [
   { id: '1', userName: 'User1', rating: 5, comment: 'Great product!' },
-  { id: '2', userName: 'User2', rating: 4, comment: 'Good quality.' }
+  { id: '2', userName: 'User2', rating: 4, comment: 'Good quality.' },
 ];
 
 useAuth.mockReturnValue({ user: mockUser });
@@ -27,7 +31,7 @@ useReviews.mockReturnValue({
   loading: false,
   averageRating: 4.5,
   addReview: mockAddReview,
-  reviewCount: 2
+  reviewCount: 2,
 });
 
 addDoc.mockResolvedValue();
@@ -42,7 +46,9 @@ describe('Reviews Component', () => {
   test('renders reviews list and average rating', () => {
     render(<Reviews productId={productId} />);
 
-    expect(screen.getByText('Reseñas (2) - Promedio: 4.5/5')).toBeInTheDocument();
+    expect(
+      screen.getByText('Reseñas (2) - Promedio: 4.5/5')
+    ).toBeInTheDocument();
     expect(screen.getByText('Great product!')).toBeInTheDocument();
     expect(screen.getByText('Good quality.')).toBeInTheDocument();
   });
@@ -54,7 +60,9 @@ describe('Reviews Component', () => {
     fireEvent.click(toggleBtn);
 
     expect(screen.getByText('Ocultar Formulario')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { placeholder: 'Escribe tu reseña...' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { placeholder: 'Escribe tu reseña...' })
+    ).toBeInTheDocument();
   });
 
   test('submits review successfully', async () => {
@@ -74,7 +82,10 @@ describe('Reviews Component', () => {
 
     await waitFor(() => {
       expect(mockAddReview).toHaveBeenCalledWith(5, 'Test review');
-      expect(mockAddToast).toHaveBeenCalledWith('Reseña agregada exitosamente', 'success');
+      expect(mockAddToast).toHaveBeenCalledWith(
+        'Reseña agregada exitosamente',
+        'success'
+      );
     });
   });
 
@@ -85,15 +96,21 @@ describe('Reviews Component', () => {
 
     fireEvent.click(screen.getByText('Agregar Reseña'));
 
-    expect(mockAddToast).toHaveBeenCalledWith('Debes estar logueado para agregar reseñas', 'error');
+    expect(mockAddToast).toHaveBeenCalledWith(
+      'Debes estar logueado para agregar reseñas',
+      'error'
+    );
   });
 
   test('loads more reviews when button clicked', () => {
-    const moreReviews = [...mockReviews, { id: '3', userName: 'User3', rating: 3, comment: 'Average.' }];
+    const moreReviews = [
+      ...mockReviews,
+      { id: '3', userName: 'User3', rating: 3, comment: 'Average.' },
+    ];
     useReviews.mockReturnValue({
       ...useReviews(),
       reviews: moreReviews,
-      reviewCount: 3
+      reviewCount: 3,
     });
 
     render(<Reviews productId={productId} />);
@@ -111,7 +128,7 @@ describe('Reviews Component', () => {
     const pendingReview = { ...mockReviews[0], adminReview: false };
     useReviews.mockReturnValue({
       ...useReviews(),
-      reviews: [pendingReview]
+      reviews: [pendingReview],
     });
 
     render(<Reviews productId={productId} />);

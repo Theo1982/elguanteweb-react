@@ -20,9 +20,7 @@ const mockProduct = {
 const TestWrapper = ({ children }) => (
   <BrowserRouter>
     <AuthProvider>
-      <CartProvider>
-        {children}
-      </CartProvider>
+      <CartProvider>{children}</CartProvider>
     </AuthProvider>
   </BrowserRouter>
 );
@@ -44,7 +42,7 @@ describe('ProductCard', () => {
 
   it('should show "Sin stock" when stock is 0', () => {
     const outOfStockProduct = { ...mockProduct, stock: 0 };
-    
+
     render(
       <TestWrapper>
         <ProductCard product={outOfStockProduct} />
@@ -80,7 +78,7 @@ describe('ProductCard', () => {
 
   it('should format price correctly', () => {
     const expensiveProduct = { ...mockProduct, precio: 1234567 };
-    
+
     render(
       <TestWrapper>
         <ProductCard product={expensiveProduct} />

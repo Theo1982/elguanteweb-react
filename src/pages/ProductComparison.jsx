@@ -53,7 +53,13 @@ const ProductComparison = () => {
   }
 
   const getUniqueAttributes = () => {
-    const attributes = ['nombre', 'precio', 'descripcion', 'categoria', 'stock'];
+    const attributes = [
+      'nombre',
+      'precio',
+      'descripcion',
+      'categoria',
+      'stock',
+    ];
     return attributes;
   };
 
@@ -63,7 +69,11 @@ const ProductComparison = () => {
       <div className="comparison-grid">
         {products.map((product, index) => (
           <div key={product.id} className="comparison-column">
-            <img src={product.imagen} alt={product.nombre} className="comparison-image" />
+            <img
+              src={product.imagen}
+              alt={product.nombre}
+              className="comparison-image"
+            />
             <h3>{product.nombre}</h3>
             <p className="comparison-price">${product.precio}</p>
             <ul className="comparison-attributes">
@@ -74,14 +84,18 @@ const ProductComparison = () => {
               ))}
             </ul>
             {user && (
-              <button onClick={() => {/* Add to cart logic */}}>
+              <button
+                onClick={() => {
+                  /* Add to cart logic */
+                }}
+              >
                 Agregar al carrito
               </button>
             )}
           </div>
         ))}
       </div>
-      <style jsx>{`
+      <style>{`
         .comparison-container {
           max-width: 1200px;
           margin: 0 auto;

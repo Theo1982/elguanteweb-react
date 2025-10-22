@@ -4,8 +4,70 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mercadopago from "mercadopago";
 import rateLimit from "express-rate-limit";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
 
 dotenv.config();
+
+// ✅ FIXED: Initialize Firebase Admin
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+// ✅ FIXED: Points system function
+const awardUserPoints = async (userId, points, reason) => {
+  try {
+    const userPointsRef = doc(db, 'userPoints', userId);
+    const userPointsDoc = await getDoc(userPointsRef);
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000); // 60 days
+
+    if (userPointsDoc.exists()) {
+      // Update existing points
+      const currentData = userPointsDoc.data();
+      const newPoints = (currentData.points || 0) + points;
+
+      await updateDoc(userPointsRef, {
+        points: newPoints,
+        history: [...(currentData.history || []), {
+          date: now.toISOString(),
+          points: points,
+          reason: reason
+        }],
+        expiresAt: expiresAt.toISOString(),
+        lastUpdated: now.toISOString()
+      });
+    } else {
+      // Create new points document
+      await updateDoc(userPointsRef, {
+        userId,
+        points: points,
+        level: 'Bronce', // Will be calculated based on points
+        history: [{
+          date: now.toISOString(),
+          points: points,
+          reason: reason
+        }],
+        expiresAt: expiresAt.toISOString(),
+        createdAt: now.toISOString(),
+        lastUpdated: now.toISOString()
+      });
+    }
+
+    console.log(`✅ ${points} puntos otorgados a usuario ${userId}`);
+  } catch (error) {
+    console.error('❌ Error otorgando puntos:', error);
+  }
+};
 
 const app = express();
 
@@ -132,7 +194,7 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
 
     // Calcular total para validación
     const total = items.reduce((sum, item) => sum + (Number(item.unit_price) * Number(item.quantity)), 0);
-    
+
     if (total > 999999) { // Límite de MercadoPago
       return res.status(400).json({
         error: 'Monto excede el límite permitido',
@@ -140,16 +202,16 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
       });
     }
 
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.FRONTEND_URL 
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? process.env.FRONTEND_URL
       : 'http://localhost:5173';
 
     // Modo demo - sin MercadoPago real
     if (!mp || isTestToken) {
       console.log(`🎭 Modo demo - Simulando preferencia - Usuario: ${usuarioId} - Total: $${total}`);
-      
+
       const demoId = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       return res.json({
         id: demoId,
         init_point: `${baseUrl}/success?payment_id=${demoId}&status=approved&points=${Math.floor(total/100)}&level=Bronce`,
@@ -193,9 +255,9 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
     });
   } catch (error) {
     console.error("❌ Error en create_preference:", error);
-    
+
     // No exponer detalles internos en producción
-    const errorMessage = process.env.NODE_ENV === 'production' 
+    const errorMessage = process.env.NODE_ENV === 'production'
       ? 'Error interno del servidor'
       : error.message;
 
@@ -236,7 +298,7 @@ app.get("/payment/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error al obtener pago:", error);
-    
+
     if (error.status === 404) {
       return res.status(404).json({
         error: "Pago no encontrado",
@@ -244,7 +306,7 @@ app.get("/payment/:id", async (req, res) => {
       });
     }
 
-    const errorMessage = process.env.NODE_ENV === 'production' 
+    const errorMessage = process.env.NODE_ENV === 'production'
       ? 'Error consultando pago'
       : error.message;
 
@@ -263,10 +325,53 @@ app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res)
     if (type === 'payment') {
       const paymentId = data.id;
       console.log(`🔔 Webhook recibido - Pago: ${paymentId}`);
-      
-      // Aquí podrías actualizar el estado en tu base de datos
-      // const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
-      // await updatePaymentStatus(paymentId, payment.status);
+
+      // ✅ FIXED: Get payment details and update order status
+      if (mp) {
+        const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
+
+        if (payment.status === 'approved') {
+          // Find order by payment ID in metadata
+          const ordersRef = collection(db, 'orders');
+          const q = query(ordersRef, where('paymentId', '==', paymentId));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const orderDoc = querySnapshot.docs[0];
+            const orderData = orderDoc.data();
+
+            // Update order status to completed
+            await updateDoc(orderDoc.ref, {
+              status: 'completed',
+              paymentDetails: {
+                paymentId,
+                status: payment.status,
+                transactionAmount: payment.transaction_amount,
+                dateApproved: payment.date_approved
+              }
+            });
+
+            // ✅ Reduce inventory for each item
+            for (const item of orderData.items) {
+              const productRef = doc(db, 'productos', item.id);
+              const productDoc = await getDoc(productRef);
+
+              if (productDoc.exists()) {
+                const currentStock = productDoc.data().stock || 0;
+                await updateDoc(productRef, {
+                  stock: Math.max(0, currentStock - item.quantity)
+                });
+              }
+            }
+
+            // ✅ Award points to user
+            const pointsEarned = orderData.pointsEarned || Math.floor(orderData.total / 1000);
+            await awardUserPoints(orderData.userId, pointsEarned, `Compra #${orderDoc.id}`);
+
+            console.log(`✅ Orden ${orderDoc.id} completada - Inventario reducido - Puntos otorgados`);
+          }
+        }
+      }
     }
 
     res.status(200).send('OK');
@@ -276,12 +381,48 @@ app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res)
   }
 });
 
+// 👉 Enviar mensaje de WhatsApp
+app.post("/send-whatsapp", async (req, res) => {
+  try {
+    const { to, message } = req.body;
+
+    if (!to || !message) {
+      return res.status(400).json({
+        error: 'Faltan parámetros requeridos',
+        details: 'Se requieren "to" y "message"'
+      });
+    }
+
+    const whatsappService = await import('./whatsappService.js');
+    const result = await whatsappService.default.sendMessage(to, message);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        messageId: result.messageId,
+        status: result.status
+      });
+    } else {
+      res.status(500).json({
+        error: 'Error enviando mensaje de WhatsApp',
+        details: result.error
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error en send-whatsapp:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      details: error.message
+    });
+  }
+});
+
 // Manejo de errores global
 app.use((error, req, res, next) => {
   console.error('❌ Error no manejado:', error);
-  
+
   const statusCode = error.statusCode || 500;
-  const message = process.env.NODE_ENV === 'production' 
+  const message = process.env.NODE_ENV === 'production'
     ? 'Error interno del servidor'
     : error.message;
 

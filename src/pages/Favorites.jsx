@@ -1,10 +1,10 @@
-import React from "react";
-import { useFavorites } from "../context/FavoritesContext";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import ProductCard from "../components/ProductCard";
-import LoadingSpinner from "../components/LoadingSpinner";
-import "../styles/Shop.css";
+import React from 'react';
+import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import ProductCard from '../components/ProductCard';
+import LoadingSpinner from '../components/LoadingSpinner';
+import '../styles/Shop.css';
 
 export default function Favorites() {
   const { favorites, loading, removeFromFavorites } = useFavorites();
@@ -37,7 +37,7 @@ export default function Favorites() {
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
-              marginTop: '1rem'
+              marginTop: '1rem',
             }}
           >
             Ir a la Tienda
@@ -46,10 +46,11 @@ export default function Favorites() {
       ) : (
         <>
           <p style={{ marginBottom: '1rem' }}>
-            Tienes {favorites.length} producto{favorites.length !== 1 ? 's' : ''} en favoritos.
+            Tienes {favorites.length} producto
+            {favorites.length !== 1 ? 's' : ''} en favoritos.
           </p>
           <div className="grid">
-            {favorites.map((product) => (
+            {favorites.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

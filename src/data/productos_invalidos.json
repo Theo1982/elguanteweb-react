@@ -17,9 +17,7 @@
       "fechaNormalizacion": "2025-09-18T19:03:33.783Z",
       "activo": true
     },
-    "errores": [
-      "Categoría faltante"
-    ],
+    "errores": ["Categoría faltante"],
     "fuente": "export_items_full.json"
   },
   {
@@ -40,9 +38,7 @@
       "fechaNormalizacion": "2025-09-18T19:03:33.783Z",
       "activo": true
     },
-    "errores": [
-      "Categoría faltante"
-    ],
+    "errores": ["Categoría faltante"],
     "fuente": "export_items_full.json"
   },
   {
@@ -63,9 +59,7 @@
       "fechaNormalizacion": "2025-09-18T19:03:33.783Z",
       "activo": true
     },
-    "errores": [
-      "Categoría faltante"
-    ],
+    "errores": ["Categoría faltante"],
     "fuente": "export_items_full.json"
   },
   {
@@ -86,9 +80,7 @@
       "fechaNormalizacion": "2025-09-18T19:03:33.783Z",
       "activo": true
     },
-    "errores": [
-      "Categoría faltante"
-    ],
+    "errores": ["Categoría faltante"],
     "fuente": "export_items_full.json"
   },
   {
@@ -109,9 +101,7 @@
       "fechaNormalizacion": "2025-09-18T19:03:33.783Z",
       "activo": true
     },
-    "errores": [
-      "Precio inválido"
-    ],
+    "errores": ["Precio inválido"],
     "fuente": "export_items_full.json"
   }
 ]

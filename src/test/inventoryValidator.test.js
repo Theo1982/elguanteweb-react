@@ -11,16 +11,16 @@ const mockUpdate = vi.fn();
 
 const mockDb = {
   collection: mockCollection,
-  runTransaction: mockRunTransaction
+  runTransaction: mockRunTransaction,
 };
 
 const mockDocRef = {
   get: mockGet,
-  update: mockUpdate
+  update: mockUpdate,
 };
 
 mockCollection.mockReturnValue({
-  doc: mockDoc
+  doc: mockDoc,
 });
 
 mockDoc.mockReturnValue(mockDocRef);
@@ -39,7 +39,7 @@ describe('InventoryValidator', () => {
         nombre: 'Producto de Prueba',
         precio: 100,
         stock: 10,
-        categoria: 'Test'
+        categoria: 'Test',
       };
 
       const result = validator.validateProductData(validProduct);
@@ -53,7 +53,7 @@ describe('InventoryValidator', () => {
         nombre: '',
         precio: 100,
         stock: 10,
-        categoria: 'Test'
+        categoria: 'Test',
       };
 
       const result = validator.validateProductData(invalidProduct);
@@ -67,7 +67,7 @@ describe('InventoryValidator', () => {
         nombre: 'Producto',
         precio: -10,
         stock: 10,
-        categoria: 'Test'
+        categoria: 'Test',
       };
 
       const result = validator.validateProductData(invalidProduct);
@@ -81,7 +81,7 @@ describe('InventoryValidator', () => {
         nombre: 'Producto',
         precio: 100,
         stock: -5,
-        categoria: 'Test'
+        categoria: 'Test',
       };
 
       const result = validator.validateProductData(invalidProduct);
@@ -95,7 +95,7 @@ describe('InventoryValidator', () => {
         nombre: 'Producto',
         precio: 100,
         stock: 10,
-        categoria: ''
+        categoria: '',
       };
 
       const result = validator.validateProductData(invalidProduct);
@@ -109,7 +109,7 @@ describe('InventoryValidator', () => {
         nombre: '',
         precio: 0,
         stock: -1,
-        categoria: ''
+        categoria: '',
       };
 
       const result = validator.validateProductData(invalidProduct);
@@ -123,12 +123,12 @@ describe('InventoryValidator', () => {
     it('should validate sufficient stock', async () => {
       const mockProductData = {
         nombre: 'Producto Test',
-        stock: 20
+        stock: 20,
       };
 
       mockGet.mockResolvedValue({
         exists: true,
-        data: () => mockProductData
+        data: () => mockProductData,
       });
 
       const result = await validator.validateStock('product123', 10);
@@ -141,43 +141,43 @@ describe('InventoryValidator', () => {
     it('should reject insufficient stock', async () => {
       const mockProductData = {
         nombre: 'Producto Test',
-        stock: 5
+        stock: 5,
       };
 
       mockGet.mockResolvedValue({
         exists: true,
-        data: () => mockProductData
+        data: () => mockProductData,
       });
 
-      await expect(validator.validateStock('product123', 10))
-        .rejects
-        .toThrow('Stock insuficiente');
+      await expect(validator.validateStock('product123', 10)).rejects.toThrow(
+        'Stock insuficiente'
+      );
     });
 
     it('should reject non-existent product', async () => {
       mockGet.mockResolvedValue({
-        exists: false
+        exists: false,
       });
 
-      await expect(validator.validateStock('nonexistent', 1))
-        .rejects
-        .toThrow('Producto nonexistent no encontrado');
+      await expect(validator.validateStock('nonexistent', 1)).rejects.toThrow(
+        'Producto nonexistent no encontrado'
+      );
     });
 
     it('should reject zero stock', async () => {
       const mockProductData = {
         nombre: 'Producto Sin Stock',
-        stock: 0
+        stock: 0,
       };
 
       mockGet.mockResolvedValue({
         exists: true,
-        data: () => mockProductData
+        data: () => mockProductData,
       });
 
-      await expect(validator.validateStock('product123', 1))
-        .rejects
-        .toThrow('Producto Producto Sin Stock sin stock');
+      await expect(validator.validateStock('product123', 1)).rejects.toThrow(
+        'Producto Producto Sin Stock sin stock'
+      );
     });
   });
 
@@ -185,18 +185,18 @@ describe('InventoryValidator', () => {
     it('should update stock successfully', async () => {
       const mockProductData = {
         nombre: 'Producto Test',
-        stock: 20
+        stock: 20,
       };
 
       mockGet.mockResolvedValue({
         exists: true,
-        data: () => mockProductData
+        data: () => mockProductData,
       });
 
-      mockRunTransaction.mockImplementation(async (callback) => {
+      mockRunTransaction.mockImplementation(async callback => {
         const transaction = {
           get: mockGet,
-          update: mockUpdate
+          update: mockUpdate,
         };
         return await callback(transaction);
       });
@@ -213,43 +213,43 @@ describe('InventoryValidator', () => {
     it('should reject negative stock update', async () => {
       const mockProductData = {
         nombre: 'Producto Test',
-        stock: 5
+        stock: 5,
       };
 
       mockGet.mockResolvedValue({
         exists: true,
-        data: () => mockProductData
+        data: () => mockProductData,
       });
 
-      mockRunTransaction.mockImplementation(async (callback) => {
+      mockRunTransaction.mockImplementation(async callback => {
         const transaction = {
           get: mockGet,
-          update: mockUpdate
+          update: mockUpdate,
         };
         return await callback(transaction);
       });
 
-      await expect(validator.updateStock('product123', -10))
-        .rejects
-        .toThrow('No se puede reducir el stock por debajo de 0');
+      await expect(validator.updateStock('product123', -10)).rejects.toThrow(
+        'No se puede reducir el stock por debajo de 0'
+      );
     });
 
     it('should reject update for non-existent product', async () => {
       mockGet.mockResolvedValue({
-        exists: false
+        exists: false,
       });
 
-      mockRunTransaction.mockImplementation(async (callback) => {
+      mockRunTransaction.mockImplementation(async callback => {
         const transaction = {
           get: mockGet,
-          update: mockUpdate
+          update: mockUpdate,
         };
         return await callback(transaction);
       });
 
-      await expect(validator.updateStock('nonexistent', 5))
-        .rejects
-        .toThrow('Producto nonexistent no encontrado');
+      await expect(validator.updateStock('nonexistent', 5)).rejects.toThrow(
+        'Producto nonexistent no encontrado'
+      );
     });
   });
 
@@ -261,16 +261,16 @@ describe('InventoryValidator', () => {
       mockGet
         .mockResolvedValueOnce({
           exists: true,
-          data: () => mockProductData1
+          data: () => mockProductData1,
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => mockProductData2
+          data: () => mockProductData2,
         });
 
       const items = [
         { productId: 'prod1', quantity: 5 },
-        { productId: 'prod2', quantity: 10 }
+        { productId: 'prod2', quantity: 10 },
       ];
 
       const result = await validator.validateBatchStock(items);
@@ -286,16 +286,16 @@ describe('InventoryValidator', () => {
 
       mockGet
         .mockResolvedValueOnce({
-          exists: false // Producto no existe
+          exists: false, // Producto no existe
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => mockProductData
+          data: () => mockProductData,
         });
 
       const items = [
         { productId: 'invalid', quantity: 5 },
-        { productId: 'valid', quantity: 10 }
+        { productId: 'valid', quantity: 10 },
       ];
 
       const result = await validator.validateBatchStock(items);

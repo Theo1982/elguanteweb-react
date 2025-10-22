@@ -5,7 +5,7 @@ const StarRating = ({ rating, onRatingChange, readonly = false }) => {
 
   return (
     <div className="star-rating" role="radiogroup" aria-label="Rating stars">
-      {stars.map((star) => (
+      {stars.map(star => (
         <span
           key={star}
           className={`star ${star <= rating ? 'filled' : ''}`}
@@ -15,16 +15,20 @@ const StarRating = ({ rating, onRatingChange, readonly = false }) => {
           role={!readonly ? 'radio' : 'img'}
           aria-checked={star <= rating}
           tabIndex={!readonly ? 0 : -1}
-          onKeyDown={!readonly ? (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              onRatingChange(star);
-            }
-          } : undefined}
+          onKeyDown={
+            !readonly
+              ? e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    onRatingChange(star);
+                  }
+                }
+              : undefined
+          }
         >
           ★
         </span>
       ))}
-      <style jsx>{`
+      <style>{`
         .star-rating {
           display: flex;
           gap: 2px;

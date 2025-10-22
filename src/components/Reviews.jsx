@@ -13,14 +13,18 @@ const Reviews = ({ productId }) => {
   const [displayedReviews, setDisplayedReviews] = useState(10);
   const { user } = useAuth();
   const { addToast } = useToast();
-  const { reviews, loading, averageRating, addReview, reviewCount } = useReviews(productId);
+  const { reviews, loading, averageRating, addReview, reviewCount } =
+    useReviews(productId);
   const { hasPurchasedProduct } = useOrders(user?.uid);
   const hasReviewed = reviews.some(r => r.userId === user?.uid);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (!user || rating === 0 || comment.trim() === '') {
-      addToast('Debes estar logueado y proporcionar rating y comentario', 'error');
+      addToast(
+        'Debes estar logueado y proporcionar rating y comentario',
+        'error'
+      );
       return;
     }
 
@@ -43,7 +47,10 @@ const Reviews = ({ productId }) => {
         <span className="rating-text">{averageRating.toFixed(1)}/5</span>
         <span className="review-count">({reviewCount})</span>
       </div>
-      <button onClick={() => setShowFullReviews(true)} className="reseñas-button">
+      <button
+        onClick={() => setShowFullReviews(true)}
+        className="reseñas-button"
+      >
         Reseñas
       </button>
     </div>
@@ -52,16 +59,23 @@ const Reviews = ({ productId }) => {
   // Full reviews section (toggled)
   const renderFullReviews = () => (
     <div className="reviews-section">
-      <h3>Reseñas ({reviewCount}) - Promedio: {averageRating.toFixed(1)}/5</h3>
-      
+      <h3>
+        Reseñas ({reviewCount}) - Promedio: {averageRating.toFixed(1)}/5
+      </h3>
+
       {/* Toggle form - only if purchased and not reviewed */}
       {user && hasPurchasedProduct(productId) && !hasReviewed && (
-        <button onClick={() => setShowForm(!showForm)} className="toggle-review-form">
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="toggle-review-form"
+        >
           {showForm ? 'Ocultar Formulario' : 'Agregar Reseña'}
         </button>
       )}
       {user && !hasPurchasedProduct(productId) && (
-        <p className="purchase-required">Debes comprar el producto para reseñarlo.</p>
+        <p className="purchase-required">
+          Debes comprar el producto para reseñarlo.
+        </p>
       )}
       {user && hasReviewed && (
         <p className="already-reviewed">Ya has reseñado este producto.</p>
@@ -73,13 +87,16 @@ const Reviews = ({ productId }) => {
           <StarRating rating={rating} onRatingChange={setRating} />
           <textarea
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={e => setComment(e.target.value)}
             placeholder="Escribe tu reseña..."
             rows={3}
             maxLength={500}
             required
           />
-          <button type="submit" disabled={rating === 0 || comment.trim() === ''}>
+          <button
+            type="submit"
+            disabled={rating === 0 || comment.trim() === ''}
+          >
             Enviar Reseña
           </button>
         </form>
@@ -91,12 +108,16 @@ const Reviews = ({ productId }) => {
       ) : (
         <>
           <div className="reviews-list">
-            {reviews.slice(0, displayedReviews).map((review) => (
+            {reviews.slice(0, displayedReviews).map(review => (
               <div key={review.id} className="review-item">
                 <div className="review-header">
                   <StarRating rating={review.rating} readonly />
                   <span className="review-author">{review.userName}</span>
-                  {review.adminReview === false && <span className="moderation-badge">Pendiente Moderación</span>}
+                  {review.adminReview === false && (
+                    <span className="moderation-badge">
+                      Pendiente Moderación
+                    </span>
+                  )}
                 </div>
                 <p className="review-comment">{review.comment}</p>
               </div>
@@ -110,11 +131,14 @@ const Reviews = ({ productId }) => {
         </>
       )}
 
-      <button onClick={() => setShowFullReviews(false)} className="close-reviews-button">
+      <button
+        onClick={() => setShowFullReviews(false)}
+        className="close-reviews-button"
+      >
         Cerrar Reseñas
       </button>
 
-      <style jsx>{`
+      <style>{`
         .reviews-section {
           margin-top: 20px;
           padding: 15px;
@@ -156,7 +180,8 @@ const Reviews = ({ productId }) => {
           cursor: pointer;
           margin-bottom: 10px;
         }
-        .purchase-required, .already-reviewed {
+        .purchase-required,
+        .already-reviewed {
           color: #6b7280;
           font-style: italic;
           margin: 10px 0;

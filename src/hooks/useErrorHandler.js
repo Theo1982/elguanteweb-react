@@ -3,12 +3,12 @@ import { useCallback } from 'react';
 const useErrorHandler = () => {
   const handleError = useCallback((error, context = '') => {
     console.error(`Error ${context}:`, error);
-    
+
     // Aquí podrías integrar con un servicio de logging como Sentry
     // Sentry.captureException(error, { extra: { context } });
-    
+
     let userMessage = 'Ha ocurrido un error inesperado';
-    
+
     // Personalizar mensajes según el tipo de error
     if (error.code) {
       switch (error.code) {
@@ -39,22 +39,25 @@ const useErrorHandler = () => {
     } else if (error.message) {
       userMessage = error.message;
     }
-    
+
     return userMessage;
   }, []);
 
-  const handleAsyncError = useCallback(async (asyncFn, context = '') => {
-    try {
-      return await asyncFn();
-    } catch (error) {
-      const message = handleError(error, context);
-      throw new Error(message);
-    }
-  }, [handleError]);
+  const handleAsyncError = useCallback(
+    async (asyncFn, context = '') => {
+      try {
+        return await asyncFn();
+      } catch (error) {
+        const message = handleError(error, context);
+        throw new Error(message);
+      }
+    },
+    [handleError]
+  );
 
   return {
     handleError,
-    handleAsyncError
+    handleAsyncError,
   };
 };
 

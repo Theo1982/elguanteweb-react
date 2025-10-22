@@ -1,35 +1,42 @@
 // src/App.jsx
-import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { AuthProvider } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
-import { FavoritesProvider } from "./context/FavoritesContext";
-import useCreateUserDoc from "./hooks/useCreateUserDoc";
-import { useAnalytics } from "./hooks/useAnalytics";
-import { performanceMonitor } from "./utils/performanceMonitor";
-import LoadingSpinner from "./components/LoadingSpinner";
-import ToastContainer from "./components/ToastContainer";
-import Chatbot from "./components/Chatbot";
+import React, { Suspense, lazy, useEffect } from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { FavoritesProvider } from './context/FavoritesContext';
+import useCreateUserDoc from './hooks/useCreateUserDoc';
+import { useAnalytics } from './hooks/useAnalytics';
+import { performanceMonitor } from './utils/performanceMonitor';
+import LoadingSpinner from './components/LoadingSpinner';
+import ToastContainer from './components/ToastContainer';
+import Chatbot from './components/Chatbot';
 
 // Lazy loading de componentes para mejor rendimiento
-const Admin = lazy(() => import("./pages/Admin"));
-const Login = lazy(() => import("./pages/Login"));
-const Cart = lazy(() => import("./pages/Cart"));
-const History = lazy(() => import("./pages/History"));
-const Success = lazy(() => import("./pages/Success"));
-const Failure = lazy(() => import("./pages/Failure"));
-const Pending = lazy(() => import("./pages/Pending"));
-const Profile = lazy(() => import("./pages/Profile"));
-const AdminUsers = lazy(() => import("./pages/AdminUsers"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const Start = lazy(() => import("./pages/Start"));
-const Shop = lazy(() => import("./pages/Shop"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const ProductComparison = lazy(() => import("./pages/ProductComparison"));
-const Orders = lazy(() => import("./pages/Orders"));
+const Admin = lazy(() => import('./pages/Admin'));
+const Login = lazy(() => import('./pages/Login'));
+const Cart = lazy(() => import('./pages/Cart'));
+const History = lazy(() => import('./pages/History'));
+const Success = lazy(() => import('./pages/Success'));
+const Failure = lazy(() => import('./pages/Failure'));
+const Pending = lazy(() => import('./pages/Pending'));
+const Profile = lazy(() => import('./pages/Profile'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
+const Favorites = lazy(() => import('./pages/Favorites'));
+const Start = lazy(() => import('./pages/Start'));
+const Shop = lazy(() => import('./pages/Shop'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ProductComparison = lazy(() => import('./pages/ProductComparison'));
+const Orders = lazy(() => import('./pages/Orders'));
+const AdminOrders = lazy(() => import('./pages/AdminOrders'));
 
 function AppContent() {
   useCreateUserDoc();
@@ -56,13 +63,21 @@ function AppContent() {
           element={
             <>
               <Navbar />
-              <main style={{ minHeight: 'calc(100vh - 70px)', paddingTop: '70px' }}>
+              <main
+                style={{ minHeight: 'calc(100vh - 70px)', paddingTop: '70px' }}
+              >
                 <ErrorBoundary>
                   <Routes>
-                    <Route path="/home" element={<Navigate to="/shop" replace />} />
+                    <Route
+                      path="/home"
+                      element={<Navigate to="/shop" replace />}
+                    />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/compare/:handles" element={<ProductComparison />} />
+                    <Route
+                      path="/compare/:handles"
+                      element={<ProductComparison />}
+                    />
 
                     {/* Rutas que requieren autenticación */}
                     <Route
@@ -125,6 +140,14 @@ function AppContent() {
                       element={
                         <ProtectedRoute requiredRole="admin">
                           <AdminUsers />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin-orders"
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <AdminOrders />
                         </ProtectedRoute>
                       }
                     />

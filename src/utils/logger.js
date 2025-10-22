@@ -5,9 +5,12 @@ class Logger {
       ERROR: 0,
       WARN: 1,
       INFO: 2,
-      DEBUG: 3
+      DEBUG: 3,
     };
-    this.currentLevel = process.env.NODE_ENV === 'production' ? this.levels.INFO : this.levels.DEBUG;
+    this.currentLevel =
+      process.env.NODE_ENV === 'production'
+        ? this.levels.INFO
+        : this.levels.DEBUG;
   }
 
   // Formatear timestamp
@@ -21,7 +24,7 @@ class Logger {
       timestamp: this.getTimestamp(),
       level,
       message,
-      ...meta
+      ...meta,
     };
   }
 
@@ -78,7 +81,7 @@ class Logger {
         this.info(`Starting ${operation}`, {
           operation,
           type: 'database_operation_start',
-          ...details
+          ...details,
         });
       },
 
@@ -86,7 +89,7 @@ class Logger {
         this.info(`${operation} completed successfully`, {
           operation,
           type: 'database_operation_success',
-          ...details
+          ...details,
         });
       },
 
@@ -96,7 +99,7 @@ class Logger {
           type: 'database_operation_error',
           error: error.message,
           stack: error.stack,
-          ...details
+          ...details,
         });
       },
 
@@ -106,9 +109,9 @@ class Logger {
           type: 'batch_progress',
           current,
           total,
-          ...details
+          ...details,
         });
-      }
+      },
     };
   }
 
@@ -121,7 +124,7 @@ class Logger {
           field,
           value: typeof value === 'object' ? JSON.stringify(value) : value,
           reason,
-          ...details
+          ...details,
         });
       },
 
@@ -130,9 +133,9 @@ class Logger {
           type: 'validation_summary',
           valid,
           invalid,
-          ...details
+          ...details,
         });
-      }
+      },
     };
   }
 }

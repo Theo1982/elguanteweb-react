@@ -64,7 +64,25 @@
     "Descripción": "",
     "Precio [El Guante]": "4700.00",
     "En inventario [El Guante]": "1.000",
-    "Variantes": ["Lemon", "Coco Vainilla", "Flores Blancas", "New York", "Chicle", "Nectar", "Lavanda", "Paula", "Bebe", "Bambu", "Algodon", "Rosas", "Magnolia", "Jazmin", "Cher", "Menta Lima", "Brisa Marina"]
+    "Variantes": [
+      "Lemon",
+      "Coco Vainilla",
+      "Flores Blancas",
+      "New York",
+      "Chicle",
+      "Nectar",
+      "Lavanda",
+      "Paula",
+      "Bebe",
+      "Bambu",
+      "Algodon",
+      "Rosas",
+      "Magnolia",
+      "Jazmin",
+      "Cher",
+      "Menta Lima",
+      "Brisa Marina"
+    ]
   },
   {
     "Handle": "anilina",
@@ -74,7 +92,20 @@
     "Descripción": "",
     "Precio [El Guante]": "2700.00",
     "En inventario [El Guante]": "6.000",
-    "Variantes": ["Negro Azabache", "Rojo Fuerte", "Marron Oscuro", "Gris Perla", "Azul Electrico", "Celeste", "Verde Oscuro", "Azul Brillante", "Azul Marino", "Verde Claro", "Bordo", "Purpura"]
+    "Variantes": [
+      "Negro Azabache",
+      "Rojo Fuerte",
+      "Marron Oscuro",
+      "Gris Perla",
+      "Azul Electrico",
+      "Celeste",
+      "Verde Oscuro",
+      "Azul Brillante",
+      "Azul Marino",
+      "Verde Claro",
+      "Bordo",
+      "Purpura"
+    ]
   },
   {
     "Handle": "antorchita-horno",

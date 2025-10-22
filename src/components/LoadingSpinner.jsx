@@ -5,11 +5,7 @@ const LoadingSpinner = memo(({ size = 'medium', message = 'Cargando...' }) => {
   return (
     <div className="loading-spinner-container">
       <div className={`loading-spinner ${size}`}></div>
-      {message && (
-        <p className="loading-spinner-message">
-          {message}
-        </p>
-      )}
+      {message && <p className="loading-spinner-message">{message}</p>}
     </div>
   );
 });
