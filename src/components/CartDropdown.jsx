@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import { useCart } from '../context/CartContext';
 
 export default function CartDropdown({ onClose }) {
@@ -64,3 +64,7 @@ export default function CartDropdown({ onClose }) {
     </div>
   );
 }
+
+CartDropdown.propTypes = {
+  onClose: PropTypes.func,
+};

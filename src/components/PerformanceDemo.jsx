@@ -1,15 +1,14 @@
 // src/components/PerformanceDemo.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useServiceWorker } from '../hooks/useServiceWorker';
 import { useSmartCache } from '../hooks/useSmartCache';
 import LazyImage from './LazyImage';
-import { optimizeAndUploadImage } from '../utils/imageOptimizer';
 
 const PerformanceDemo = () => {
   const [demoStep, setDemoStep] = useState(0);
   const [metrics, setMetrics] = useState({});
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showConsole, setShowConsole] = useState(false);
+
 
   const {
     isSupported: swSupported,
@@ -35,9 +34,9 @@ const PerformanceDemo = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [updateMetrics]);
 
-  const updateMetrics = () => {
+  const updateMetrics = useCallback(() => {
     const cacheStats = getCacheStats();
 
     // Simular métricas de performance
@@ -50,7 +49,7 @@ const PerformanceDemo = () => {
     };
 
     setMetrics(perfMetrics);
-  };
+  }, [getCacheStats]);
 
   const demoSteps = [
     {

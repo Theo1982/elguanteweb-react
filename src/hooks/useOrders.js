@@ -7,7 +7,6 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from './useToast';
 
 export const useOrders = userId => {

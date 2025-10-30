@@ -1,4 +1,5 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
+import PropTypes from 'prop-types';
 import '../styles/LoadingSpinner.css';
 
 const LoadingSpinner = memo(({ size = 'medium', message = 'Cargando...' }) => {
@@ -9,6 +10,11 @@ const LoadingSpinner = memo(({ size = 'medium', message = 'Cargando...' }) => {
     </div>
   );
 });
+
+LoadingSpinner.propTypes = {
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+  message: PropTypes.string,
+};
 
 LoadingSpinner.displayName = 'LoadingSpinner';
 

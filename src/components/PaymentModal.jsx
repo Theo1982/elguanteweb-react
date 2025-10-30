@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useAuth } from '../context/AuthContext';
 import useToast from '../hooks/useToast';
 import { db } from '../firebase';
@@ -314,6 +315,22 @@ ${window.location.origin}/admin/confirm-payment/${orderData.id}
       </div>
     </div>
   );
+};
+
+PaymentModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  cart: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      nombre: PropTypes.string.isRequired,
+      precio: PropTypes.number.isRequired,
+      quantity: PropTypes.number.isRequired,
+      notes: PropTypes.string,
+    })
+  ).isRequired,
+  total: PropTypes.number.isRequired,
+  onPaymentComplete: PropTypes.func.isRequired,
 };
 
 const styles = {

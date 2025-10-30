@@ -3,8 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import useToast from '../../hooks/useToast';
 import { useReviews } from '../../hooks/useReviews';
 import Reviews from '../../components/Reviews';
-import { db } from '../../firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase'; // eslint-disable-line no-unused-vars
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore'; // eslint-disable-line no-unused-vars
 
 // Mock contexts and hooks
 jest.mock('../../context/AuthContext');

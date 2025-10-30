@@ -6,7 +6,6 @@ import {
   getDoc,
   getDocs,
   runTransaction,
-  updateDoc,
 } from 'firebase/firestore';
 
 // Validaciones de inventario en tiempo real

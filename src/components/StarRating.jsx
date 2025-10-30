@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 
 const StarRating = ({ rating, onRatingChange, readonly = false }) => {
   const stars = [1, 2, 3, 4, 5];
@@ -49,6 +49,12 @@ const StarRating = ({ rating, onRatingChange, readonly = false }) => {
       `}</style>
     </div>
   );
+};
+
+StarRating.propTypes = {
+  rating: PropTypes.number.isRequired,
+  onRatingChange: PropTypes.func,
+  readonly: PropTypes.bool,
 };
 
 export default StarRating;

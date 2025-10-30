@@ -1,9 +1,9 @@
-// backend/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mercadopago from "mercadopago";
 import rateLimit from "express-rate-limit";
+import crypto from "crypto";
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, query, where, getDocs, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
 
@@ -317,6 +317,60 @@ app.get("/payment/:id", async (req, res) => {
   }
 });
 
+// 👉 Verificar pago (nuevo endpoint)
+app.get("/verify-payment/:paymentId", async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    if (!paymentId) {
+      return res.status(400).json({
+        error: 'Payment ID requerido',
+        details: 'Debe proporcionar un ID de pago válido'
+      });
+    }
+
+    // Modo demo
+    if (!mp || isTestToken) {
+      console.log(`🎭 Modo demo - Verificando pago: ${paymentId}`);
+      return res.json({
+        verified: true,
+        status: 'approved',
+        paymentId,
+        demo: true
+      });
+    }
+
+    // Verificar pago real con MercadoPago
+    const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
+
+    console.log(`✅ Pago verificado: ${paymentId} - Estado: ${payment.status}`);
+
+    res.json({
+      verified: payment.status === 'approved',
+      status: payment.status,
+      paymentId,
+      transactionAmount: payment.transaction_amount,
+      dateApproved: payment.date_approved
+    });
+  } catch (error) {
+    console.error("❌ Error verificando pago:", error);
+
+    if (error.status === 404) {
+      return res.status(404).json({
+        verified: false,
+        error: "Pago no encontrado",
+        paymentId: req.params.paymentId
+      });
+    }
+
+    res.status(500).json({
+      verified: false,
+      error: "Error verificando pago",
+      details: process.env.NODE_ENV === 'production' ? 'Error interno' : error.message
+    });
+  }
+});
+
 // 👉 Webhook de MercadoPago (para notificaciones)
 app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res) => {
   try {
@@ -377,6 +431,90 @@ app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res)
     res.status(200).send('OK');
   } catch (error) {
     console.error('❌ Error en webhook:', error);
+    res.status(500).send('Error');
+  }
+});
+
+// 👉 Webhook de MercadoPago con validación de firma (SEGURIDAD)
+app.post("/webhook/secure", express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    // ✅ FIXED: Validate MercadoPago webhook signature
+    const signature = req.headers['x-signature'];
+    const secret = process.env.MP_WEBHOOK_SECRET;
+
+    if (!signature || !secret) {
+      console.log('⚠️ Webhook sin firma o secreto no configurado');
+      return res.status(401).send('Unauthorized');
+    }
+
+    // Verify signature (simplified - MercadoPago uses HMAC-SHA256)
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(req.body)
+      .digest('hex');
+
+    if (signature !== `sha256=${expectedSignature}`) {
+      console.log('❌ Firma de webhook inválida');
+      return res.status(401).send('Invalid signature');
+    }
+
+    const { type, data } = JSON.parse(req.body);
+
+    if (type === 'payment') {
+      const paymentId = data.id;
+      console.log(`🔔 Webhook seguro recibido - Pago: ${paymentId}`);
+
+      // ✅ FIXED: Get payment details and update order status
+      if (mp) {
+        const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
+
+        if (payment.status === 'approved') {
+          // Find order by payment ID in metadata
+          const ordersRef = collection(db, 'orders');
+          const q = query(ordersRef, where('paymentId', '==', paymentId));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const orderDoc = querySnapshot.docs[0];
+            const orderData = orderDoc.data();
+
+            // Update order status to completed
+            await updateDoc(orderDoc.ref, {
+              status: 'completed',
+              paymentDetails: {
+                paymentId,
+                status: payment.status,
+                transactionAmount: payment.transaction_amount,
+                dateApproved: payment.date_approved
+              }
+            });
+
+            // ✅ Reduce inventory for each item
+            for (const item of orderData.items) {
+              const productRef = doc(db, 'productos', item.id);
+              const productDoc = await getDoc(productRef);
+
+              if (productDoc.exists()) {
+                const currentStock = productDoc.data().stock || 0;
+                await updateDoc(productRef, {
+                  stock: Math.max(0, currentStock - item.quantity)
+                });
+              }
+            }
+
+            // ✅ Award points to user
+            const pointsEarned = orderData.pointsEarned || Math.floor(orderData.total / 1000);
+            await awardUserPoints(orderData.userId, pointsEarned, `Compra #${orderDoc.id}`);
+
+            console.log(`✅ Orden ${orderDoc.id} completada - Inventario reducido - Puntos otorgados`);
+          }
+        }
+      }
+    }
+
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('❌ Error en webhook seguro:', error);
     res.status(500).send('Error');
   }
 });

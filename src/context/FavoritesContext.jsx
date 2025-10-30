@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useAuth } from './AuthContext';
 import {
   collection,
@@ -10,11 +11,13 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useNavigate } from 'react-router-dom';
 
 const FavoritesContext = createContext();
 
 export function FavoritesProvider({ children }) {
+  FavoritesProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
   const { user } = useAuth();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);

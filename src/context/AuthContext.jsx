@@ -1,5 +1,6 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -22,6 +23,9 @@ import { db } from '../firebase';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  AuthProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +123,7 @@ export function AuthProvider({ children }) {
   };
 
   // Cargar profile extra desde Firestore
-  const loadProfile = async uid => {
+  const loadProfile = useCallback(async uid => {
     try {
       const docRef = doc(db, 'usuarios', uid);
       const snap = await getDoc(docRef);
@@ -151,7 +155,7 @@ export function AuthProvider({ children }) {
       console.error('Error loading profile:', error);
       setError(error);
     }
-  };
+  }, []);
 
   // Actualizar perfil
   const updateUserProfile = async updates => {
@@ -194,7 +198,7 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, [loadProfile]);
 
   const value = {
     user,

@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -15,7 +15,7 @@ import { CartProvider } from './context/CartContext';
 import { FavoritesProvider } from './context/FavoritesContext';
 import useCreateUserDoc from './hooks/useCreateUserDoc';
 import { useAnalytics } from './hooks/useAnalytics';
-import { performanceMonitor } from './utils/performanceMonitor';
+
 import LoadingSpinner from './components/LoadingSpinner';
 import ToastContainer from './components/ToastContainer';
 import Chatbot from './components/Chatbot';

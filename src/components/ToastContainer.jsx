@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import Toast from './Toast';
 
 const ToastContainer = ({ toasts, onRemoveToast }) => {
@@ -34,6 +34,18 @@ const ToastContainer = ({ toasts, onRemoveToast }) => {
       ))}
     </div>
   );
+};
+
+ToastContainer.propTypes = {
+  toasts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      message: PropTypes.string.isRequired,
+      type: PropTypes.oneOf(['success', 'error', 'warning', 'info']),
+      duration: PropTypes.number,
+    })
+  ).isRequired,
+  onRemoveToast: PropTypes.func.isRequired,
 };
 
 export default ToastContainer;

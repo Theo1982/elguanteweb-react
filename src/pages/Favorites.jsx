@@ -1,4 +1,3 @@
-import React from 'react';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/Shop.css';
 
 export default function Favorites() {
-  const { favorites, loading, removeFromFavorites } = useFavorites();
+  const { favorites, loading } = useFavorites();
   const { user } = useAuth();
   const navigate = useNavigate();
 

@@ -1,5 +1,6 @@
 // src/components/LazyImage.jsx
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const LazyImage = ({
   src,
@@ -52,6 +53,16 @@ const LazyImage = ({
       {...props}
     />
   );
+};
+
+LazyImage.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
+  style: PropTypes.object,
+  onLoad: PropTypes.func,
+  onError: PropTypes.func,
 };
 
 export default LazyImage;

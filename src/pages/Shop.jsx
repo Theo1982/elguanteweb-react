@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SkeletonLoader from '../components/SkeletonLoader';
 import { useLazyProducts } from '../hooks/useLazyProducts';
 import '../styles/Shop.css';
+import '../styles/SkeletonLoader.css';
 
 export default function Shop() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,7 +18,6 @@ export default function Shop() {
     hasMore,
     totalLoaded,
     loadMoreProducts,
-    filterProducts,
     refreshProducts,
   } = useLazyProducts();
 
@@ -111,7 +112,11 @@ export default function Shop() {
       </div>
 
       {/* Estado de carga */}
-      {loading && (
+      {loading && displayedProducts.length === 0 && (
+        <SkeletonLoader type="card" count={8} />
+      )}
+
+      {loading && displayedProducts.length > 0 && (
         <div className="loading-container">
           <LoadingSpinner />
           <p className="loading-text">Cargando más productos...</p>

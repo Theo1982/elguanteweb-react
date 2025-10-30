@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
@@ -17,7 +17,7 @@ const mockProduct = {
 };
 
 // Wrapper con providers necesarios
-const TestWrapper = ({ children }) => (
+const TestWrapper = ({ children }) => ( // eslint-disable-line react/prop-types
   <BrowserRouter>
     <AuthProvider>
       <CartProvider>{children}</CartProvider>

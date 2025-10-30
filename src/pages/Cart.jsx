@@ -1,5 +1,5 @@
 // src/pages/Cart.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { getUserLevel } from '../utils/getUserLevel';
@@ -40,7 +40,7 @@ export default function Cart() {
     setShowPaymentModal(true);
   };
 
-  const handlePaymentComplete = orderId => {
+  const handlePaymentComplete = () => {
     alert('Orden procesada exitosamente');
     clearCart();
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLazyProducts } from '../hooks/useLazyProducts';
 import { useAuth } from '../context/AuthContext';
@@ -8,14 +8,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 const ProductComparison = () => {
   const { productIds } = useParams(); // e.g., /compare/1,2,3
-  const ids = productIds ? productIds.split(',').map(id => id.trim()) : [];
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-  const { addToast } = useToast();
-  const { trackViewItem } = useAnalytics();
-
-  const { fetchProductsByIds } = useLazyProducts();
+  const ids = useMemo(() => productIds ? productIds.split(',').map(id => id.trim()) : [], [productIds]);
 
   useEffect(() => {
     if (ids.length === 0 || ids.length > 4) {
@@ -38,6 +31,15 @@ const ProductComparison = () => {
 
     loadProducts();
   }, [ids, fetchProductsByIds, addToast, trackViewItem]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth(); // eslint-disable-line no-unused-vars
+  const { addToast } = useToast();
+  const { trackViewItem } = useAnalytics();
+
+  const { fetchProductsByIds } = useLazyProducts();
+
+
 
   if (loading) {
     return <LoadingSpinner />;
@@ -67,7 +69,7 @@ const ProductComparison = () => {
     <div className="comparison-container">
       <h1>Comparación de Productos</h1>
       <div className="comparison-grid">
-        {products.map((product, index) => (
+        {products.map((product) => (
           <div key={product.id} className="comparison-column">
             <img
               src={product.imagen}
@@ -83,15 +85,7 @@ const ProductComparison = () => {
                 </li>
               ))}
             </ul>
-            {user && (
-              <button
-                onClick={() => {
-                  /* Add to cart logic */
-                }}
-              >
-                Agregar al carrito
-              </button>
-            )}
+
           </div>
         ))}
       </div>

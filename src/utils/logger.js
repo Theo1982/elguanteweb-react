@@ -20,12 +20,13 @@ class Logger {
 
   // Formatear mensaje de log
   formatMessage(level, message, meta = {}) {
-    return {
+    const logEntry = {
       timestamp: this.getTimestamp(),
       level,
       message,
       ...meta,
     };
+    return logEntry;
   }
 
   // Log de error
@@ -65,7 +66,7 @@ class Logger {
   }
 
   // Persistir logs (puede ser a archivo, base de datos, etc.)
-  persistLog(logEntry) {
+  persistLog() {
     // En desarrollo, solo console.log
     // En producción, podría guardar a archivo o enviar a servicio de logging
     if (process.env.NODE_ENV === 'production') {

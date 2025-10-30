@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useAnalytics } from '../../hooks/useAnalytics';
-import { db } from '../../firebase';
-import { onSnapshot, query, collection, where } from 'firebase/firestore';
+import { db } from '../../firebase'; // eslint-disable-line no-unused-vars
+import { onSnapshot, query, collection, where } from 'firebase/firestore'; // eslint-disable-line no-unused-vars
 import Chatbot from '../../components/Chatbot';
 
 // Mock analytics and Firebase
@@ -34,7 +34,7 @@ const mockSnapshot = {
   ],
 };
 
-const mockOnSnapshot = jest.fn((q, onNext, onError) => {
+const mockOnSnapshot = jest.fn((q, onNext) => {
   onNext(mockSnapshot);
 });
 

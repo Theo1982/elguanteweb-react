@@ -1,5 +1,6 @@
 // src/components/ProductCard.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
@@ -197,6 +198,19 @@ const ProductCard = ({ product }) => {
       <Reviews productId={product.id} />
     </div>
   );
+};
+
+ProductCard.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    nombre: PropTypes.string.isRequired,
+    precio: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    imagen: PropTypes.string,
+    descripcion: PropTypes.string,
+    categoria: PropTypes.string,
+    stock: PropTypes.number,
+    handle: PropTypes.string,
+  }).isRequired,
 };
 
 ProductCard.displayName = 'ProductCard';
