@@ -15,7 +15,9 @@ import Reviews from '../components/Reviews';
 import LazyImage from '../components/LazyImage';
 import LoadingSpinner from '../components/LoadingSpinner';
 import useToast from '../hooks/useToast';
-import { formatPrice } from '../utils/formatters'; // Assume formatter exists
+import { formatPrice } from '../utils/formatters';
+import useRecommendations from '../hooks/useRecommendations';
+import RecommendedProducts from '../components/RecommendedProducts';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -26,6 +28,12 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { addToast } = useToast();
 
+  // Usar el hook de recomendaciones
+  const { recommendations, loading: recLoading, error: recError } = useRecommendations(id, {
+    limit: 6,
+    strategy: 'hybrid'
+  });
+
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
@@ -35,7 +43,7 @@ const ProductDetail = () => {
         if (productSnap.exists()) {
           setProduct({ id: productSnap.id, ...productSnap.data() });
 
-          // Fetch related products
+          // Fetch related products (legacy - será reemplazado por recomendaciones)
           if (productSnap.data().categoria) {
             const relatedQuery = query(
               collection(db, 'productos'),
@@ -133,7 +141,18 @@ const ProductDetail = () => {
 
       <Reviews productId={id} />
 
-      {relatedProducts.length > 0 && (
+      {/* Nuevas recomendaciones inteligentes */}
+      <RecommendedProducts
+        recommendations={recommendations}
+        loading={recLoading}
+        error={recError}
+        title="Productos Recomendados Para Ti"
+        showReason={true}
+        maxItems={6}
+      />
+
+      {/* Productos relacionados legacy (por si las recomendaciones fallan) */}
+      {relatedProducts.length > 0 && recommendations.length === 0 && (
         <div className="related-products">
           <h2>Productos Relacionados</h2>
           <div className="related-grid">
