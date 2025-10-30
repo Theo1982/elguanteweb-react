@@ -38,6 +38,7 @@ const ProductComparison = lazy(() => import('./pages/ProductComparison'));
 const Orders = lazy(() => import('./pages/Orders'));
 const AdminOrders = lazy(() => import('./pages/AdminOrders'));
 const Referrals = lazy(() => import('./pages/Referrals'));
+const Coupons = lazy(() => import('./pages/Coupons'));
 
 function AppContent() {
   useCreateUserDoc();
@@ -126,6 +127,14 @@ function AppContent() {
                       element={
                         <ProtectedRoute>
                           <Referrals />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/coupons"
+                      element={
+                        <ProtectedRoute>
+                          <Coupons />
                         </ProtectedRoute>
                       }
                     />
