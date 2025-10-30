@@ -85,6 +85,13 @@ const Navbar = memo(function Navbar() {
                   <span aria-hidden="true">❤️</span>
                   <span>Favoritos</span>
                 </Link>
+                <Link
+                  to="/referrals"
+                  className={`navbar-link ${isActive('/referrals') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">🎁</span>
+                  <span>Referidos</span>
+                </Link>
               </>
             )}
             {profile?.role === 'admin' && (
@@ -203,6 +210,13 @@ const Navbar = memo(function Navbar() {
               >
                 <span aria-hidden="true">❤️</span>
                 <span>Favoritos</span>
+              </Link>
+              <Link
+                to="/referrals"
+                className={`navbar-link navbar-mobile-link ${isActive('/referrals') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">🎁</span>
+                <span>Referidos</span>
               </Link>
             </>
           )}
