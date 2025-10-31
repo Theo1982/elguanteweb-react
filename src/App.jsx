@@ -18,7 +18,7 @@ import { useAnalytics } from './hooks/useAnalytics';
 
 import LoadingSpinner from './components/LoadingSpinner';
 import ToastContainer from './components/ToastContainer';
-import Chatbot from './components/Chatbot';
+import ChatWidget from './components/ChatWidget';
 
 // Lazy loading de componentes para mejor rendimiento
 const Admin = lazy(() => import('./pages/Admin'));
@@ -53,7 +53,7 @@ function AppContent() {
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <Chatbot />
+      <ChatWidget />
       <Routes>
         <Route path="/" element={<Start />} />
         <Route path="/start" element={<Start />} />
