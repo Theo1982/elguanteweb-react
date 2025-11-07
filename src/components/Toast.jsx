@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -30,14 +31,14 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
       display: 'flex',
       alignItems: 'center',
-      gap: '8px'
+      gap: '8px',
     };
 
     const typeStyles = {
       success: { backgroundColor: '#10b981' },
       error: { backgroundColor: '#ef4444' },
       warning: { backgroundColor: '#f59e0b' },
-      info: { backgroundColor: '#3b82f6' }
+      info: { backgroundColor: '#3b82f6' },
     };
 
     return { ...baseStyles, ...typeStyles[type] };
@@ -48,7 +49,7 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
       success: '✅',
       error: '❌',
       warning: '⚠️',
-      info: 'ℹ️'
+      info: 'ℹ️',
     };
     return icons[type];
   };
@@ -71,13 +72,20 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
           cursor: 'pointer',
           fontSize: '16px',
           padding: '0',
-          marginLeft: '8px'
+          marginLeft: '8px',
         }}
       >
         ×
       </button>
     </div>
   );
+};
+
+Toast.propTypes = {
+  message: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(['success', 'error', 'warning', 'info']),
+  duration: PropTypes.number,
+  onClose: PropTypes.func,
 };
 
 export default Toast;

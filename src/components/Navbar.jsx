@@ -1,12 +1,12 @@
-import React, { useState, memo } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
-import MiNivel from "./MiNivel";
-import LoadingSpinner from "./LoadingSpinner";
-import useWindowSize from "../hooks/useWindowSize";
-import logo from "../assets/logo.png";
-import "../styles/Navbar.css";
+import { useState, memo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import MiNivel from './MiNivel';
+import LoadingSpinner from './LoadingSpinner';
+import useWindowSize from '../hooks/useWindowSize';
+import logo from '../assets/logo.png';
+import '../styles/Navbar.css';
 
 const Navbar = memo(function Navbar() {
   const { getCartItemsCount, loading: cartLoading } = useCart();
@@ -20,7 +20,7 @@ const Navbar = memo(function Navbar() {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/");
+      navigate('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -30,11 +30,11 @@ const Navbar = memo(function Navbar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const isActive = (path) => {
+  const isActive = path => {
     return location.pathname === path;
   };
 
-  if (authLoading) {
+  if (authLoading || (user && !profile)) {
     return (
       <nav className="navbar">
         <LoadingSpinner size="small" message="" />
@@ -54,39 +54,89 @@ const Navbar = memo(function Navbar() {
         {/* Links principales */}
         {!isMobile && (
           <nav aria-label="Menú principal">
-            <Link to="/shop" className={`navbar-link ${isActive("/shop") ? "active" : ""}`}>
+            <Link
+              to="/shop"
+              className={`navbar-link ${isActive('/shop') ? 'active' : ''}`}
+            >
               <span aria-hidden="true">🛍️</span>
               <span>Tienda</span>
+            </Link>
+            <Link
+              to="/cart"
+              className={`navbar-link ${isActive('/cart') ? 'active' : ''}`}
+              aria-label={`Carrito de compras${!cartLoading ? `. ${getCartItemsCount()} productos` : ''}`}
+            >
+              <span aria-hidden="true">🛒</span>
+              <span>Carrito {!cartLoading && `(${getCartItemsCount()})`}</span>
             </Link>
             {user && (
               <>
                 <Link
-                  to="/cart"
-                  className={`navbar-link ${isActive("/cart") ? "active" : ""}`}
-                  aria-label={`Carrito de compras${!cartLoading ? `. ${getCartItemsCount()} productos` : ''}`}
+                  to="/history"
+                  className={`navbar-link ${isActive('/history') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">🛒</span>
-                  <span>Carrito {!cartLoading && `(${getCartItemsCount()})`}</span>
-                </Link>
-                <Link to="/history" className={`navbar-link ${isActive("/history") ? "active" : ""}`}>
                   <span aria-hidden="true">📜</span>
                   <span>Historial</span>
                 </Link>
-                <Link to="/favorites" className={`navbar-link ${isActive("/favorites") ? "active" : ""}`}>
+                <Link
+                  to="/favorites"
+                  className={`navbar-link ${isActive('/favorites') ? 'active' : ''}`}
+                >
                   <span aria-hidden="true">❤️</span>
                   <span>Favoritos</span>
                 </Link>
+                <Link
+                  to="/referrals"
+                  className={`navbar-link ${isActive('/referrals') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">🎁</span>
+                  <span>Referidos</span>
+                </Link>
+                <Link
+                  to="/coupons"
+                  className={`navbar-link ${isActive('/coupons') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">🎫</span>
+                  <span>Cupones</span>
+                </Link>
               </>
             )}
-            {profile?.role === "admin" && (
+            {profile?.role === 'admin' && (
               <>
-                <Link to="/admin" className={`navbar-link ${isActive("/admin") ? "active" : ""}`}>
+                <Link
+                  to="/admin"
+                  className={`navbar-link ${isActive('/admin') ? 'active' : ''}`}
+                >
                   <span aria-hidden="true">⚙️</span>
-                  <span>Admin</span>
+                  <span>Productos</span>
                 </Link>
-                <Link to="/admin-users" className={`navbar-link ${isActive("/admin-users") ? "active" : ""}`}>
+                <Link
+                  to="/admin-users"
+                  className={`navbar-link ${isActive('/admin-users') ? 'active' : ''}`}
+                >
                   <span aria-hidden="true">👥</span>
                   <span>Usuarios</span>
+                </Link>
+                <Link
+                  to="/admin-orders"
+                  className={`navbar-link ${isActive('/admin-orders') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">📦</span>
+                  <span>Pedidos</span>
+                </Link>
+                <Link
+                  to="/admin-newsletter"
+                  className={`navbar-link ${isActive('/admin-newsletter') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">📧</span>
+                  <span>Newsletter</span>
+                </Link>
+                <Link
+                  to="/admin-moderation"
+                  className={`navbar-link ${isActive('/admin-moderation') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">🛡️</span>
+                  <span>Moderación</span>
                 </Link>
               </>
             )}
@@ -98,18 +148,21 @@ const Navbar = memo(function Navbar() {
           {user && <MiNivel />}
 
           {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Link
                 to="/profile"
-                className={`navbar-link ${isActive("/profile") ? "active" : ""}`}
-                style={{ marginRight: "10px" }}
+                className={`navbar-link ${isActive('/profile') ? 'active' : ''}`}
+                style={{ marginRight: '10px' }}
                 aria-label="Ir a mi perfil"
               >
                 <span aria-hidden="true">👤</span>
                 <span>Mi Perfil</span>
               </Link>
               {!isMobile && (
-                <span className="navbar-user-info" aria-label={`Usuario: ${user.displayName || user.email?.split('@')[0]}`}>
+                <span
+                  className="navbar-user-info"
+                  aria-label={`Usuario: ${user.displayName || user.email?.split('@')[0]}`}
+                >
                   <span aria-hidden="true">👋</span>
                   <span>{user.displayName || user.email?.split('@')[0]}</span>
                 </span>
@@ -123,14 +176,16 @@ const Navbar = memo(function Navbar() {
               </button>
             </div>
           ) : (
-            <Link to="/login" className="navbar-login-btn" aria-label="Iniciar sesión">
+            <Link
+              to="/login"
+              className="navbar-login-btn"
+              aria-label="Iniciar sesión"
+            >
               <span aria-hidden="true">🔑</span>
               <span>Ingresar</span>
             </Link>
           )}
         </div>
-
-
       </div>
 
       {/* Mobile Menu Toggle */}
@@ -140,7 +195,7 @@ const Navbar = memo(function Navbar() {
           onClick={toggleMenu}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
-          aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
         >
           {isMenuOpen ? '✕' : '☰'}
         </button>
@@ -150,39 +205,92 @@ const Navbar = memo(function Navbar() {
       {isMobile && (
         <nav
           id="mobile-menu"
-          className={`navbar-mobile-menu ${isMenuOpen ? "open" : ""}`}
+          className={`navbar-mobile-menu ${isMenuOpen ? 'open' : ''}`}
           aria-label="Menú móvil"
           role="navigation"
         >
-          <Link to="/shop" className={`navbar-link navbar-mobile-link ${isActive("/shop") ? "active" : ""}`}>
+          <Link
+            to="/shop"
+            className={`navbar-link navbar-mobile-link ${isActive('/shop') ? 'active' : ''}`}
+          >
             <span aria-hidden="true">🛍️</span>
             <span>Tienda</span>
           </Link>
+          <Link
+            to="/cart"
+            className={`navbar-link navbar-mobile-link ${isActive('/cart') ? 'active' : ''}`}
+          >
+            <span aria-hidden="true">🛒</span>
+            <span>Carrito {!cartLoading && `(${getCartItemsCount()})`}</span>
+          </Link>
           {user && (
             <>
-              <Link to="/cart" className={`navbar-link navbar-mobile-link ${isActive("/cart") ? "active" : ""}`}>
-                <span aria-hidden="true">🛒</span>
-                <span>Carrito {!cartLoading && `(${getCartItemsCount()})`}</span>
-              </Link>
-              <Link to="/history" className={`navbar-link navbar-mobile-link ${isActive("/history") ? "active" : ""}`}>
+              <Link
+                to="/history"
+                className={`navbar-link navbar-mobile-link ${isActive('/history') ? 'active' : ''}`}
+              >
                 <span aria-hidden="true">📜</span>
                 <span>Historial</span>
               </Link>
-              <Link to="/favorites" className={`navbar-link navbar-mobile-link ${isActive("/favorites") ? "active" : ""}`}>
+              <Link
+                to="/favorites"
+                className={`navbar-link navbar-mobile-link ${isActive('/favorites') ? 'active' : ''}`}
+              >
                 <span aria-hidden="true">❤️</span>
                 <span>Favoritos</span>
               </Link>
+              <Link
+                to="/referrals"
+                className={`navbar-link navbar-mobile-link ${isActive('/referrals') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">🎁</span>
+                <span>Referidos</span>
+              </Link>
+              <Link
+                to="/coupons"
+                className={`navbar-link navbar-mobile-link ${isActive('/coupons') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">🎫</span>
+                <span>Cupones</span>
+              </Link>
             </>
           )}
-          {profile?.role === "admin" && (
+          {profile?.role === 'admin' && (
             <>
-              <Link to="/admin" className={`navbar-link navbar-mobile-link ${isActive("/admin") ? "active" : ""}`}>
+              <Link
+                to="/admin"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin') ? 'active' : ''}`}
+              >
                 <span aria-hidden="true">⚙️</span>
-                <span>Admin</span>
+                <span>Productos</span>
               </Link>
-              <Link to="/admin-users" className={`navbar-link navbar-mobile-link ${isActive("/admin-users") ? "active" : ""}`}>
+              <Link
+                to="/admin-users"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-users') ? 'active' : ''}`}
+              >
                 <span aria-hidden="true">👥</span>
                 <span>Usuarios</span>
+              </Link>
+              <Link
+                to="/admin-orders"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-orders') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">📦</span>
+                <span>Pedidos</span>
+              </Link>
+              <Link
+                to="/admin-newsletter"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-newsletter') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">📧</span>
+                <span>Newsletter</span>
+              </Link>
+              <Link
+                to="/admin-moderation"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-moderation') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">🛡️</span>
+                <span>Moderación</span>
               </Link>
             </>
           )}

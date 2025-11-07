@@ -8,32 +8,34 @@ vi.mock('firebase/firestore', () => ({
   collection: vi.fn(),
   writeBatch: vi.fn(() => ({
     set: vi.fn(),
-    commit: vi.fn().mockResolvedValue()
+    commit: vi.fn().mockResolvedValue(),
   })),
   getDocs: vi.fn(() => Promise.resolve({ size: 0, forEach: vi.fn() })),
   doc: vi.fn(),
-  addDoc: vi.fn().mockResolvedValue({ id: 'test-id' })
+  addDoc: vi.fn().mockResolvedValue({ id: 'test-id' }),
 }));
 
 vi.mock('dotenv', () => ({
   default: {
-    config: vi.fn()
-  }
+    config: vi.fn(),
+  },
 }));
 
 vi.mock('fs', () => ({
   default: {
-    readFileSync: vi.fn(() => JSON.stringify([
-      {
-        "Nombre": "Producto Test",
-        "Precio [El Guante]": "100",
-        "En inventario [El Guante]": "10",
-        "Categoria": "Test",
-        "Descripción": "",
-        "imagen": ""
-      }
-    ]))
-  }
+    readFileSync: vi.fn(() =>
+      JSON.stringify([
+        {
+          Nombre: 'Producto Test',
+          'Precio [El Guante]': '100',
+          'En inventario [El Guante]': '10',
+          Categoria: 'Test',
+          Descripción: '',
+          imagen: '',
+        },
+      ])
+    ),
+  },
 }));
 
 // Mock del logger
@@ -42,17 +44,17 @@ vi.mock('../utils/logger.js', () => ({
     createDatabaseLogger: vi.fn(() => ({
       start: vi.fn(),
       success: vi.fn(),
-      error: vi.fn()
+      error: vi.fn(),
     })),
-    warn: vi.fn()
-  }
+    warn: vi.fn(),
+  },
 }));
 
 // Mock del inventory validator
 vi.mock('../utils/inventoryValidator.js', () => ({
   createInventoryValidator: vi.fn(() => ({
-    validateProductData: vi.fn(() => ({ isValid: true, errors: [] }))
-  }))
+    validateProductData: vi.fn(() => ({ isValid: true, errors: [] })),
+  })),
 }));
 
 describe('populateFirestore script', () => {
@@ -79,7 +81,7 @@ describe('populateFirestore script', () => {
       VITE_FIREBASE_PROJECT_ID: 'test-project',
       VITE_FIREBASE_STORAGE_BUCKET: 'test.firebasestorage.app',
       VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789',
-      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test',
     };
 
     const { initializeApp } = await import('firebase/app');
@@ -93,12 +95,18 @@ describe('populateFirestore script', () => {
 
   it('should handle missing environment variables', async () => {
     // Mock process.env sin las variables requeridas
-    const originalEnv = process.env;
-    process.env = {};
+    const originalEnv = { ...process.env };
+    const mockEnv = {};
 
     // El script debería salir con error si faltan variables
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+
+    // Temporarily replace process.env
+    Object.defineProperty(process, 'env', {
+      value: mockEnv,
+      writable: true,
+    });
 
     // Importar el módulo debería validar las variables
     await import('../../scripts/populateFirestore.js');
@@ -109,16 +117,21 @@ describe('populateFirestore script', () => {
     );
 
     // Restaurar
-    process.env = originalEnv;
+    Object.defineProperty(process, 'env', {
+      value: originalEnv,
+      writable: true,
+    });
     consoleSpy.mockRestore();
     exitSpy.mockRestore();
   });
 
   it('should validate product data structure', async () => {
-    const { createInventoryValidator } = await import('../utils/inventoryValidator.js');
+    const { createInventoryValidator } = await import(
+      '../utils/inventoryValidator.js'
+    );
 
     const mockValidator = {
-      validateProductData: vi.fn(() => ({ isValid: true, errors: [] }))
+      validateProductData: vi.fn(() => ({ isValid: true, errors: [] })),
     };
 
     createInventoryValidator.mockReturnValue(mockValidator);
@@ -158,10 +171,14 @@ describe('Data validation functions', () => {
     // Nota: Estas funciones están definidas dentro del script,
     // por lo que probamos la lógica equivalente
 
-    const validarProducto = (producto) => {
+    const validarProducto = producto => {
       const errores = [];
 
-      if (!producto.nombre || typeof producto.nombre !== 'string' || producto.nombre.trim().length === 0) {
+      if (
+        !producto.nombre ||
+        typeof producto.nombre !== 'string' ||
+        producto.nombre.trim().length === 0
+      ) {
         errores.push('Nombre inválido o faltante');
       }
 
@@ -169,11 +186,19 @@ describe('Data validation functions', () => {
         errores.push('Precio inválido o faltante');
       }
 
-      if (producto.stock === undefined || isNaN(producto.stock) || producto.stock < 0) {
+      if (
+        producto.stock === undefined ||
+        isNaN(producto.stock) ||
+        producto.stock < 0
+      ) {
         errores.push('Stock inválido');
       }
 
-      if (!producto.categoria || typeof producto.categoria !== 'string' || producto.categoria.trim().length === 0) {
+      if (
+        !producto.categoria ||
+        typeof producto.categoria !== 'string' ||
+        producto.categoria.trim().length === 0
+      ) {
         errores.push('Categoría inválida o faltante');
       }
 
@@ -185,7 +210,7 @@ describe('Data validation functions', () => {
       nombre: 'Producto Test',
       precio: 100,
       stock: 10,
-      categoria: 'Test'
+      categoria: 'Test',
     };
 
     expect(validarProducto(validProduct)).toHaveLength(0);
@@ -195,7 +220,7 @@ describe('Data validation functions', () => {
       nombre: '',
       precio: -10,
       stock: -5,
-      categoria: ''
+      categoria: '',
     };
 
     const errors = validarProducto(invalidProduct);

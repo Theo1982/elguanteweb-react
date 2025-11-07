@@ -1,19 +1,174 @@
-// backend/server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mercadopago from "mercadopago";
 import rateLimit from "express-rate-limit";
+import crypto from "crypto";
+import cron from "node-cron";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, getDoc, increment, Timestamp } from 'firebase/firestore';
 
 dotenv.config();
+
+// ✅ FIXED: Initialize Firebase Admin
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+// ✅ FIXED: Improved Points system function with proper userPoints collection
+const awardUserPoints = async (userId, points, reason) => {
+  try {
+    const userPointsRef = doc(db, 'userPoints', userId);
+    const userPointsDoc = await getDoc(userPointsRef);
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000); // 60 days
+
+    // Calculate level based on points
+    const calculateLevel = (totalPoints) => {
+      if (totalPoints >= 100) return 'Oro';
+      if (totalPoints >= 50) return 'Plata';
+      if (totalPoints >= 25) return 'Bronce';
+      return 'Sin nivel';
+    };
+
+    if (userPointsDoc.exists()) {
+      // Update existing points
+      const currentData = userPointsDoc.data();
+      const newPoints = (currentData.points || 0) + points;
+      const newLevel = calculateLevel(newPoints);
+
+      await updateDoc(userPointsRef, {
+        points: newPoints,
+        level: newLevel,
+        history: [...(currentData.history || []), {
+          date: now.toISOString(),
+          points: points,
+          reason: reason
+        }],
+        expiresAt: expiresAt.toISOString(),
+        lastUpdated: now.toISOString()
+      });
+    } else {
+      // Create new points document
+      const newLevel = calculateLevel(points);
+      await updateDoc(userPointsRef, {
+        userId,
+        points: points,
+        level: newLevel,
+        history: [{
+          date: now.toISOString(),
+          points: points,
+          reason: reason
+        }],
+        expiresAt: expiresAt.toISOString(),
+        createdAt: now.toISOString(),
+        lastUpdated: now.toISOString()
+      });
+    }
+
+    console.log(`✅ ${points} puntos otorgados a usuario ${userId} - Nuevo total calculado`);
+  } catch (error) {
+    console.error('❌ Error otorgando puntos:', error);
+  }
+};
+
+// ✅ FIXED: Payment Timeout Handling - Function to cancel expired pending orders
+const cancelExpiredPendingOrders = async () => {
+  try {
+    console.log('🔍 Checking for expired pending orders...');
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const ordersRef = collection(db, 'orders');
+
+    // Query for pending orders older than 24 hours
+    const q = query(
+      ordersRef,
+      where('status', '==', 'pending'),
+      where('timestamp', '<', Timestamp.fromDate(twentyFourHoursAgo))
+    );
+
+    const querySnapshot = await getDocs(q);
+    let cancelledCount = 0;
+
+    for (const orderDoc of querySnapshot.docs) {
+      const orderData = orderDoc.data();
+
+      // Update order status to cancelled
+      await updateDoc(orderDoc.ref, {
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString(),
+        cancellationReason: 'timeout_expired'
+      });
+
+      // Restore inventory for each item
+      for (const item of orderData.items) {
+        const productRef = doc(db, 'productos', item.id);
+        const productDoc = await getDoc(productRef);
+
+        if (productDoc.exists()) {
+          const currentStock = productDoc.data().stock || 0;
+          await updateDoc(productRef, {
+            stock: currentStock + item.quantity
+          });
+        }
+      }
+
+      // Notify user via WhatsApp if phone number available
+      if (orderData.phoneNumber) {
+        try {
+          const whatsappService = await import('./whatsappService.js');
+          const message = `❌ *Orden Cancelada por Tiempo Expirado*
+
+Tu orden #${orderDoc.id} ha sido cancelada porque no se completó el pago dentro de las 24 horas.
+
+📦 *Productos devueltos al inventario:*
+${orderData.items.map(item => `• ${item.nombre} x${item.quantity}`).join('\n')}
+
+💰 *Total:* $${orderData.total}
+
+Si deseas volver a intentar la compra, puedes hacerlo desde la app.
+
+Gracias por tu comprensión.`;
+
+          await whatsappService.default.sendMessage(orderData.phoneNumber, message);
+        } catch (whatsappError) {
+          console.error('Error sending cancellation WhatsApp:', whatsappError);
+        }
+      }
+
+      console.log(`✅ Orden ${orderDoc.id} cancelada por timeout - Inventario restaurado`);
+      cancelledCount++;
+    }
+
+    if (cancelledCount > 0) {
+      console.log(`📊 ${cancelledCount} órdenes canceladas por timeout`);
+    } else {
+      console.log('✅ No hay órdenes pendientes expiradas');
+    }
+
+    return cancelledCount;
+  } catch (error) {
+    console.error('❌ Error cancelando órdenes expiradas:', error);
+    return 0;
+  }
+};
 
 const app = express();
 
 // Middleware de seguridad
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://tu-dominio.com'] 
-    : ['http://localhost:5173', 'http://localhost:3000'],
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://tu-dominio.com']
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -132,7 +287,7 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
 
     // Calcular total para validación
     const total = items.reduce((sum, item) => sum + (Number(item.unit_price) * Number(item.quantity)), 0);
-    
+
     if (total > 999999) { // Límite de MercadoPago
       return res.status(400).json({
         error: 'Monto excede el límite permitido',
@@ -140,16 +295,16 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
       });
     }
 
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.FRONTEND_URL 
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? process.env.FRONTEND_URL
       : 'http://localhost:5173';
 
     // Modo demo - sin MercadoPago real
     if (!mp || isTestToken) {
       console.log(`🎭 Modo demo - Simulando preferencia - Usuario: ${usuarioId} - Total: $${total}`);
-      
+
       const demoId = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       return res.json({
         id: demoId,
         init_point: `${baseUrl}/success?payment_id=${demoId}&status=approved&points=${Math.floor(total/100)}&level=Bronce`,
@@ -169,6 +324,7 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
         success: `${baseUrl}/success`,
         failure: `${baseUrl}/failure`,
         pending: `${baseUrl}/pending`,
+
       },
       auto_return: "approved",
       metadata: {
@@ -193,9 +349,9 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
     });
   } catch (error) {
     console.error("❌ Error en create_preference:", error);
-    
+
     // No exponer detalles internos en producción
-    const errorMessage = process.env.NODE_ENV === 'production' 
+    const errorMessage = process.env.NODE_ENV === 'production'
       ? 'Error interno del servidor'
       : error.message;
 
@@ -236,7 +392,7 @@ app.get("/payment/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error al obtener pago:", error);
-    
+
     if (error.status === 404) {
       return res.status(404).json({
         error: "Pago no encontrado",
@@ -244,13 +400,67 @@ app.get("/payment/:id", async (req, res) => {
       });
     }
 
-    const errorMessage = process.env.NODE_ENV === 'production' 
+    const errorMessage = process.env.NODE_ENV === 'production'
       ? 'Error consultando pago'
       : error.message;
 
     res.status(500).json({
       error: "Error consultando pago",
       details: errorMessage,
+    });
+  }
+});
+
+// 👉 Verificar pago (nuevo endpoint)
+app.get("/verify-payment/:paymentId", async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    if (!paymentId) {
+      return res.status(400).json({
+        error: 'Payment ID requerido',
+        details: 'Debe proporcionar un ID de pago válido'
+      });
+    }
+
+    // Modo demo
+    if (!mp || isTestToken) {
+      console.log(`🎭 Modo demo - Verificando pago: ${paymentId}`);
+      return res.json({
+        verified: true,
+        status: 'approved',
+        paymentId,
+        demo: true
+      });
+    }
+
+    // Verificar pago real con MercadoPago
+    const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
+
+    console.log(`✅ Pago verificado: ${paymentId} - Estado: ${payment.status}`);
+
+    res.json({
+      verified: payment.status === 'approved',
+      status: payment.status,
+      paymentId,
+      transactionAmount: payment.transaction_amount,
+      dateApproved: payment.date_approved
+    });
+  } catch (error) {
+    console.error("❌ Error verificando pago:", error);
+
+    if (error.status === 404) {
+      return res.status(404).json({
+        verified: false,
+        error: "Pago no encontrado",
+        paymentId: req.params.paymentId
+      });
+    }
+
+    res.status(500).json({
+      verified: false,
+      error: "Error verificando pago",
+      details: process.env.NODE_ENV === 'production' ? 'Error interno' : error.message
     });
   }
 });
@@ -263,10 +473,53 @@ app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res)
     if (type === 'payment') {
       const paymentId = data.id;
       console.log(`🔔 Webhook recibido - Pago: ${paymentId}`);
-      
-      // Aquí podrías actualizar el estado en tu base de datos
-      // const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
-      // await updatePaymentStatus(paymentId, payment.status);
+
+      // ✅ FIXED: Get payment details and update order status
+      if (mp) {
+        const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
+
+        if (payment.status === 'approved') {
+          // Find order by payment ID in metadata
+          const ordersRef = collection(db, 'orders');
+          const q = query(ordersRef, where('paymentId', '==', paymentId));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const orderDoc = querySnapshot.docs[0];
+            const orderData = orderDoc.data();
+
+            // Update order status to completed
+            await updateDoc(orderDoc.ref, {
+              status: 'completed',
+              paymentDetails: {
+                paymentId,
+                status: payment.status,
+                transactionAmount: payment.transaction_amount,
+                dateApproved: payment.date_approved
+              }
+            });
+
+            // ✅ Reduce inventory for each item
+            for (const item of orderData.items) {
+              const productRef = doc(db, 'productos', item.id);
+              const productDoc = await getDoc(productRef);
+
+              if (productDoc.exists()) {
+                const currentStock = productDoc.data().stock || 0;
+                await updateDoc(productRef, {
+                  stock: Math.max(0, currentStock - item.quantity)
+                });
+              }
+            }
+
+            // ✅ Award points to user
+            const pointsEarned = orderData.pointsEarned || Math.floor(orderData.total / 1000);
+            await awardUserPoints(orderData.userId, pointsEarned, `Compra #${orderDoc.id}`);
+
+            console.log(`✅ Orden ${orderDoc.id} completada - Inventario reducido - Puntos otorgados`);
+          }
+        }
+      }
     }
 
     res.status(200).send('OK');
@@ -276,12 +529,145 @@ app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res)
   }
 });
 
+// 👉 Webhook de MercadoPago con validación de firma (SEGURIDAD)
+app.post("/webhook/secure", express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    // ✅ FIXED: Validate MercadoPago webhook signature
+    const signature = req.headers['x-signature'];
+    const secret = process.env.MP_WEBHOOK_SECRET;
+
+    if (!signature || !secret) {
+      console.log('⚠️ Webhook sin firma o secreto no configurado');
+      return res.status(401).send('Unauthorized');
+    }
+
+    // MercadoPago signature format: x-signature: ts=123456789,v1=signature
+    const signatureParts = signature.split(', ');
+    const ts = signatureParts[0]?.split('=')[1];
+    const v1Signature = signatureParts[1]?.split('=')[1];
+
+    if (!ts || !v1Signature) {
+      console.log('❌ Formato de firma inválido');
+      return res.status(401).send('Invalid signature format');
+    }
+
+    // Create the payload to verify: ts + body
+    const payload = ts + req.body;
+
+    // Verify signature using HMAC-SHA256
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex');
+
+    if (v1Signature !== expectedSignature) {
+      console.log('❌ Firma de webhook inválida');
+      return res.status(401).send('Invalid signature');
+    }
+
+    const { type, data } = JSON.parse(req.body);
+
+    if (type === 'payment') {
+      const paymentId = data.id;
+      console.log(`🔔 Webhook seguro recibido - Pago: ${paymentId}`);
+
+      // ✅ FIXED: Get payment details and update order status
+      if (mp) {
+        const payment = await new mercadopago.Payment(mp).get({ id: paymentId });
+
+        if (payment.status === 'approved') {
+          // Find order by payment ID in metadata
+          const ordersRef = collection(db, 'orders');
+          const q = query(ordersRef, where('paymentId', '==', paymentId));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            const orderDoc = querySnapshot.docs[0];
+            const orderData = orderDoc.data();
+
+            // Update order status to completed
+            await updateDoc(orderDoc.ref, {
+              status: 'completed',
+              paymentDetails: {
+                paymentId,
+                status: payment.status,
+                transactionAmount: payment.transaction_amount,
+                dateApproved: payment.date_approved
+              }
+            });
+
+            // ✅ Reduce inventory for each item
+            for (const item of orderData.items) {
+              const productRef = doc(db, 'productos', item.id);
+              const productDoc = await getDoc(productRef);
+
+              if (productDoc.exists()) {
+                const currentStock = productDoc.data().stock || 0;
+                await updateDoc(productRef, {
+                  stock: Math.max(0, currentStock - item.quantity)
+                });
+              }
+            }
+
+            // ✅ Award points to user
+            const pointsEarned = orderData.pointsEarned || Math.floor(orderData.total / 1000);
+            await awardUserPoints(orderData.userId, pointsEarned, `Compra #${orderDoc.id}`);
+
+            console.log(`✅ Orden ${orderDoc.id} completada - Inventario reducido - Puntos otorgados`);
+          }
+        }
+      }
+    }
+
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('❌ Error en webhook seguro:', error);
+    res.status(500).send('Error');
+  }
+});
+
+// 👉 Enviar mensaje de WhatsApp
+app.post("/send-whatsapp", async (req, res) => {
+  try {
+    const { to, message } = req.body;
+
+    if (!to || !message) {
+      return res.status(400).json({
+        error: 'Faltan parámetros requeridos',
+        details: 'Se requieren "to" y "message"'
+      });
+    }
+
+    const whatsappService = await import('./whatsappService.js');
+    const result = await whatsappService.default.sendMessage(to, message);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        messageId: result.messageId,
+        status: result.status
+      });
+    } else {
+      res.status(500).json({
+        error: 'Error enviando mensaje de WhatsApp',
+        details: result.error
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error en send-whatsapp:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      details: error.message
+    });
+  }
+});
+
 // Manejo de errores global
 app.use((error, req, res, next) => {
   console.error('❌ Error no manejado:', error);
-  
+
   const statusCode = error.statusCode || 500;
-  const message = process.env.NODE_ENV === 'production' 
+  const message = process.env.NODE_ENV === 'production'
     ? 'Error interno del servidor'
     : error.message;
 
@@ -292,12 +678,18 @@ app.use((error, req, res, next) => {
 });
 
 // Manejo de rutas no encontradas
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     error: 'Endpoint no encontrado',
     path: req.originalUrl,
     method: req.method
   });
+});
+
+// ✅ FIXED: Schedule payment timeout checks every hour
+cron.schedule('0 * * * *', async () => {
+  console.log('⏰ Running scheduled payment timeout check...');
+  await cancelExpiredPendingOrders();
 });
 
 // Graceful shutdown
@@ -315,4 +707,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend corriendo en http://localhost:${PORT}`);
   console.log(`📊 Health check disponible en http://localhost:${PORT}/health`);
   console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`⏰ Payment timeout checks scheduled every hour`);
 });

@@ -1,11 +1,23 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "./AuthContext";
-import { collection, addDoc, query, where, getDocs, deleteDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
+import { createContext, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useAuth } from './AuthContext';
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 const FavoritesContext = createContext();
 
 export function FavoritesProvider({ children }) {
+  FavoritesProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
   const { user } = useAuth();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,11 +32,14 @@ export function FavoritesProvider({ children }) {
       }
 
       try {
-        const q = query(collection(db, "favoritos"), where("userId", "==", user.uid));
+        const q = query(
+          collection(db, 'favoritos'),
+          where('userId', '==', user.uid)
+        );
         const querySnapshot = await getDocs(q);
         const favs = querySnapshot.docs.map(doc => ({
           id: doc.data().productId,
-          ...doc.data().productData
+          ...doc.data().productData,
         }));
         setFavorites(favs);
       } catch (error) {
@@ -38,7 +53,7 @@ export function FavoritesProvider({ children }) {
     loadFavorites();
   }, [user]);
 
-  const addToFavorites = async (product) => {
+  const addToFavorites = async product => {
     if (!user || !product || !product.id) {
       console.error('Invalid user or product:', user, product);
       return;
@@ -51,7 +66,7 @@ export function FavoritesProvider({ children }) {
 
     try {
       // Add to Firestore first
-      await addDoc(collection(db, "favoritos"), {
+      await addDoc(collection(db, 'favoritos'), {
         userId: user.uid,
         productId: product.id,
         productData: {
@@ -62,7 +77,7 @@ export function FavoritesProvider({ children }) {
           categoria: product.categoria || '',
           stock: product.stock || 0,
         },
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       // Update local state after success
@@ -81,14 +96,18 @@ export function FavoritesProvider({ children }) {
     }
   };
 
-  const removeFromFavorites = async (productId) => {
+  const removeFromFavorites = async productId => {
     if (!user) return;
 
     try {
       // Find and delete from Firestore
-      const q = query(collection(db, "favoritos"), where("userId", "==", user.uid), where("productId", "==", productId));
+      const q = query(
+        collection(db, 'favoritos'),
+        where('userId', '==', user.uid),
+        where('productId', '==', productId)
+      );
       const querySnapshot = await getDocs(q);
-      querySnapshot.forEach(async (doc) => {
+      querySnapshot.forEach(async doc => {
         await deleteDoc(doc.ref);
       });
 
@@ -99,8 +118,39 @@ export function FavoritesProvider({ children }) {
     }
   };
 
-  const isFavorite = (productId) => {
+  const isFavorite = productId => {
     return favorites.some(item => item.id === productId);
+  };
+
+  const exportFavorites = () => {
+    const data = {
+      favorites: favorites.map(item => ({
+        id: item.id,
+        nombre: item.nombre,
+        precio: item.precio,
+        imagen: item.imagen,
+        categoria: item.categoria,
+      })),
+      exportedAt: new Date().toISOString(),
+      userId: user?.uid,
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wishlist-${user?.uid || 'anon'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const shareFavorites = () => {
+    const ids = favorites.map(item => item.id).join(',');
+    const shareUrl = `/shop?favorites=${ids}`;
+    navigator.clipboard.writeText(window.location.origin + shareUrl);
+    alert('URL de wishlist copiada al portapapeles');
   };
 
   const getFavoritesCount = () => {
@@ -115,7 +165,9 @@ export function FavoritesProvider({ children }) {
         addToFavorites,
         removeFromFavorites,
         isFavorite,
-        getFavoritesCount
+        getFavoritesCount,
+        exportFavorites,
+        shareFavorites,
       }}
     >
       {children}

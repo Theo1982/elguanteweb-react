@@ -4,21 +4,21 @@ export const performanceMonitor = {
   initialLoad: {
     startTime: null,
     endTime: null,
-    duration: null
+    duration: null,
   },
 
   // Métricas de navegación
   navigation: {
     pageViews: 0,
     routeChanges: 0,
-    lazyLoads: 0
+    lazyLoads: 0,
   },
 
   // Métricas de cache
   cache: {
     hits: 0,
     misses: 0,
-    size: 0
+    size: 0,
   },
 
   // Métricas de imágenes
@@ -26,7 +26,7 @@ export const performanceMonitor = {
     loaded: 0,
     failed: 0,
     lazyLoaded: 0,
-    webpConverted: 0
+    webpConverted: 0,
   },
 
   // Inicializar monitoreo
@@ -36,7 +36,8 @@ export const performanceMonitor = {
     // Monitorear carga inicial
     window.addEventListener('load', () => {
       this.initialLoad.endTime = performance.now();
-      this.initialLoad.duration = this.initialLoad.endTime - this.initialLoad.startTime;
+      this.initialLoad.duration =
+        this.initialLoad.endTime - this.initialLoad.startTime;
       this.logInitialLoad();
     });
 
@@ -57,7 +58,7 @@ export const performanceMonitor = {
 
   // Observar imágenes lazy
   observeLazyImages() {
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           this.images.lazyLoaded++;
@@ -125,7 +126,9 @@ export const performanceMonitor = {
 
     // Carga inicial
     console.group('🚀 Carga Inicial');
-    console.log(`⏱️ Duración: ${this.initialLoad.duration?.toFixed(2) || 'N/A'}ms`);
+    console.log(
+      `⏱️ Duración: ${this.initialLoad.duration?.toFixed(2) || 'N/A'}ms`
+    );
     console.log(`📊 Score: ${this.calculatePerformanceScore()}%`);
     console.groupEnd();
 
@@ -185,11 +188,15 @@ export const performanceMonitor = {
     }
 
     if (this.images.lazyLoaded < this.images.loaded * 0.5) {
-      console.log('💡 Pocos lazy loads. Verifica configuración de IntersectionObserver.');
+      console.log(
+        '💡 Pocos lazy loads. Verifica configuración de IntersectionObserver.'
+      );
     }
 
-    console.log('✅ Sistema funcionando correctamente con optimizaciones Fase 2.');
-  }
+    console.log(
+      '✅ Sistema funcionando correctamente con optimizaciones Fase 2.'
+    );
+  },
 };
 
 // Inicializar automáticamente

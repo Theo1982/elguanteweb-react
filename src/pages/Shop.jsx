@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SkeletonLoader from '../components/SkeletonLoader';
 import { useLazyProducts } from '../hooks/useLazyProducts';
 import '../styles/Shop.css';
+import '../styles/SkeletonLoader.css';
 
 export default function Shop() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,8 +18,7 @@ export default function Shop() {
     hasMore,
     totalLoaded,
     loadMoreProducts,
-    filterProducts,
-    refreshProducts
+    refreshProducts,
   } = useLazyProducts();
 
   // Debounce para el término de búsqueda
@@ -31,17 +32,27 @@ export default function Shop() {
 
   // Actualizar productos mostrados cuando cambian los productos o el término de búsqueda debounced
   useEffect(() => {
-    const filtered = filterProducts(debouncedSearchTerm);
-    setDisplayedProducts(filtered);
-  }, [products, debouncedSearchTerm, filterProducts]);
+    if (!debouncedSearchTerm.trim()) {
+      setDisplayedProducts(products);
+    } else {
+      const term = debouncedSearchTerm.toLowerCase();
+      const filtered = products.filter(
+        product =>
+          product.nombre?.toLowerCase().includes(term) ||
+          product.categoria?.toLowerCase().includes(term) ||
+          product.descripcion?.toLowerCase().includes(term)
+      );
+      setDisplayedProducts(filtered);
+    }
+  }, [products, debouncedSearchTerm]);
 
   // Función para manejar scroll infinito
   const handleScroll = useCallback(() => {
     if (
-      window.innerHeight + document.documentElement.scrollTop
-      >= document.documentElement.offsetHeight - 1000 // Cargar 1000px antes del final
-      && hasMore
-      && !loading
+      window.innerHeight + document.documentElement.scrollTop >=
+        document.documentElement.offsetHeight - 1000 && // Cargar 1000px antes del final
+      hasMore &&
+      !loading
     ) {
       loadMoreProducts();
     }
@@ -54,7 +65,7 @@ export default function Shop() {
   }, [handleScroll]);
 
   // Función para manejar cambios en la búsqueda
-  const handleSearchChange = (e) => {
+  const handleSearchChange = e => {
     setSearchTerm(e.target.value);
   };
 
@@ -76,7 +87,8 @@ export default function Shop() {
       <div className="product-count">
         {totalLoaded > 0 && (
           <span>
-            Mostrando {displayedProducts.length} de {totalLoaded} productos cargados
+            Mostrando {displayedProducts.length} de {totalLoaded} productos
+            cargados
             {hasMore && ' (desplázate para cargar más)'}
           </span>
         )}
@@ -86,10 +98,7 @@ export default function Shop() {
       {error && (
         <div className="error-message">
           {error}
-          <button
-            onClick={refreshProducts}
-            className="retry-button"
-          >
+          <button onClick={refreshProducts} className="retry-button">
             Reintentar
           </button>
         </div>
@@ -97,18 +106,20 @@ export default function Shop() {
 
       {/* Grid de productos */}
       <div className="grid">
-        {displayedProducts.map((product) => (
+        {displayedProducts.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
       {/* Estado de carga */}
-      {loading && (
+      {loading && displayedProducts.length === 0 && (
+        <SkeletonLoader type="card" count={8} />
+      )}
+
+      {loading && displayedProducts.length > 0 && (
         <div className="loading-container">
           <LoadingSpinner />
-          <p className="loading-text">
-            Cargando más productos...
-          </p>
+          <p className="loading-text">Cargando más productos...</p>
         </div>
       )}
 
@@ -117,12 +128,11 @@ export default function Shop() {
         <div className="no-results">
           {debouncedSearchTerm ? (
             <p>
-              No se encontraron productos que coincidan con "{debouncedSearchTerm}".
+              No se encontraron productos que coincidan con "
+              {debouncedSearchTerm}".
             </p>
           ) : (
-            <p>
-              No hay productos disponibles en este momento.
-            </p>
+            <p>No hay productos disponibles en este momento.</p>
           )}
         </div>
       )}
@@ -131,9 +141,7 @@ export default function Shop() {
       {!hasMore && totalLoaded > 0 && !debouncedSearchTerm && (
         <div className="end-message">
           <p>Has visto todos los productos disponibles.</p>
-          <p className="total">
-            Total de productos: {totalLoaded}
-          </p>
+          <p className="total">Total de productos: {totalLoaded}</p>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 // src/components/SimpleDemo.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const SimpleDemo = () => {
   const [demoStep, setDemoStep] = useState(0);
@@ -20,12 +20,18 @@ const SimpleDemo = () => {
 
   const demoSteps = [
     {
-      title: "🚀 Lazy Loading",
-      description: "Las imágenes se cargan solo cuando entran en el viewport",
+      title: '🚀 Lazy Loading',
+      description: 'Las imágenes se cargan solo cuando entran en el viewport',
       component: (
         <div>
           <h4>Imágenes con Lazy Loading:</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '10px',
+            }}
+          >
             {[1, 2, 3, 4, 5, 6].map(i => (
               <img
                 key={i}
@@ -40,30 +46,53 @@ const SimpleDemo = () => {
             💡 Desplázate hacia abajo para ver el lazy loading nativo
           </p>
         </div>
-      )
+      ),
     },
     {
-      title: "📱 PWA Status",
-      description: "Estado de Progressive Web App",
+      title: '📱 PWA Status',
+      description: 'Estado de Progressive Web App',
       component: (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-            <div style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              backgroundColor: navigator.serviceWorker ? '#4CAF50' : '#f44336'
-            }}></div>
-            <span>Service Worker: {navigator.serviceWorker ? '✅ Soportado' : '❌ No soportado'}</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '15px',
+            }}
+          >
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                backgroundColor: navigator.serviceWorker
+                  ? '#4CAF50'
+                  : '#f44336',
+              }}
+            ></div>
+            <span>
+              Service Worker:{' '}
+              {navigator.serviceWorker ? '✅ Soportado' : '❌ No soportado'}
+            </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-            <div style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              backgroundColor: isOnline ? '#4CAF50' : '#f44336'
-            }}></div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '15px',
+            }}
+          >
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                backgroundColor: isOnline ? '#4CAF50' : '#f44336',
+              }}
+            ></div>
             <span>Conexión: {isOnline ? '🟢 Online' : '🔴 Offline'}</span>
           </div>
 
@@ -77,22 +106,40 @@ const SimpleDemo = () => {
             </ul>
           </div>
         </div>
-      )
+      ),
     },
     {
-      title: "⚡ Performance",
-      description: "Métricas de rendimiento en tiempo real",
+      title: '⚡ Performance',
+      description: 'Métricas de rendimiento en tiempo real',
       component: (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-            <div style={{ padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '15px',
+            }}
+          >
+            <div
+              style={{
+                padding: '15px',
+                backgroundColor: '#f5f5f5',
+                borderRadius: '8px',
+              }}
+            >
               <h4>📊 Métricas</h4>
               <p>Carga: {(Math.random() * 0.5 + 0.8).toFixed(2)}s</p>
               <p>Cache Hit: {(Math.random() * 20 + 80).toFixed(1)}%</p>
               <p>Compresión: {(Math.random() * 10 + 60).toFixed(1)}%</p>
             </div>
 
-            <div style={{ padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+            <div
+              style={{
+                padding: '15px',
+                backgroundColor: '#f5f5f5',
+                borderRadius: '8px',
+              }}
+            >
               <h4>🚀 Optimizaciones</h4>
               <p>✅ Lazy Loading</p>
               <p>✅ WebP Images</p>
@@ -116,30 +163,32 @@ const SimpleDemo = () => {
               color: 'white',
               border: 'none',
               borderRadius: '5px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             📊 Ver Reporte en Consola
           </button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      width: '350px',
-      backgroundColor: 'white',
-      border: '2px solid #2196F3',
-      borderRadius: '10px',
-      padding: '20px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-      zIndex: 1000,
-      fontFamily: 'Arial, sans-serif'
-    }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        width: '350px',
+        backgroundColor: 'white',
+        border: '2px solid #2196F3',
+        borderRadius: '10px',
+        padding: '20px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        zIndex: 1000,
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
       <div style={{ marginBottom: '20px' }}>
         <h3 style={{ margin: '0 0 10px 0', color: '#2196F3' }}>
           🎯 Demo Fase 2 - Optimizaciones
@@ -156,7 +205,7 @@ const SimpleDemo = () => {
                 backgroundColor: demoStep === index ? '#2196F3' : '#e3f2fd',
                 color: demoStep === index ? 'white' : '#2196F3',
                 cursor: 'pointer',
-                fontSize: '12px'
+                fontSize: '12px',
               }}
             >
               {index + 1}
@@ -174,25 +223,39 @@ const SimpleDemo = () => {
         </p>
       </div>
 
-      <div>
-        {demoSteps[demoStep].component}
-      </div>
+      <div>{demoSteps[demoStep].component}</div>
 
-      <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{
+          marginTop: '20px',
+          paddingTop: '15px',
+          borderTop: '1px solid #eee',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <span style={{ fontSize: '12px', color: '#666' }}>
             Paso {demoStep + 1} de {demoSteps.length}
           </span>
           <div>
             <button
-              onClick={() => setDemoStep((demoStep - 1 + demoSteps.length) % demoSteps.length)}
+              onClick={() =>
+                setDemoStep(
+                  (demoStep - 1 + demoSteps.length) % demoSteps.length
+                )
+              }
               style={{
                 padding: '5px 10px',
                 marginRight: '5px',
                 border: '1px solid #ccc',
                 borderRadius: '3px',
                 backgroundColor: 'white',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               ←
@@ -204,7 +267,7 @@ const SimpleDemo = () => {
                 border: '1px solid #ccc',
                 borderRadius: '3px',
                 backgroundColor: 'white',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               →

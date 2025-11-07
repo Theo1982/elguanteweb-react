@@ -34,7 +34,8 @@
     "Categoria": "VARIOS",
     "Descripción": "",
     "Precio [El Guante]": "1500.00",
-    "En inventario [El Guante]": "4.000"
+    "En inventario [El Guante]": "4.000",
+    "Variantes": []
   },
   {
     "Handle": "alimento-gato",
@@ -62,7 +63,26 @@
     "Categoria": "PERFUMINAS / AROMA HOGAR",
     "Descripción": "",
     "Precio [El Guante]": "4700.00",
-    "En inventario [El Guante]": "1.000"
+    "En inventario [El Guante]": "1.000",
+    "Variantes": [
+      "Lemon",
+      "Coco Vainilla",
+      "Flores Blancas",
+      "New York",
+      "Chicle",
+      "Nectar",
+      "Lavanda",
+      "Paula",
+      "Bebe",
+      "Bambu",
+      "Algodon",
+      "Rosas",
+      "Magnolia",
+      "Jazmin",
+      "Cher",
+      "Menta Lima",
+      "Brisa Marina"
+    ]
   },
   {
     "Handle": "anilina",
@@ -71,7 +91,21 @@
     "Categoria": "VARIOS",
     "Descripción": "",
     "Precio [El Guante]": "2700.00",
-    "En inventario [El Guante]": "6.000"
+    "En inventario [El Guante]": "6.000",
+    "Variantes": [
+      "Negro Azabache",
+      "Rojo Fuerte",
+      "Marron Oscuro",
+      "Gris Perla",
+      "Azul Electrico",
+      "Celeste",
+      "Verde Oscuro",
+      "Azul Brillante",
+      "Azul Marino",
+      "Verde Claro",
+      "Bordo",
+      "Purpura"
+    ]
   },
   {
     "Handle": "antorchita-horno",
@@ -206,8 +240,8 @@
     "REF": "10222",
     "Nombre": "BICARBONATO",
     "Categoria": "VARIOS",
-    "Descripción": "",
-    "Precio [El Guante]": "6000.00",
+    "Descripción": "250 grs",
+    "Precio [El Guante]": "2000.00",
     "En inventario [El Guante]": "25.000"
   },
   {

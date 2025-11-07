@@ -1,8 +1,8 @@
 // src/hooks/useServiceWorker.js
 import { useState, useEffect } from 'react';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 export const useServiceWorker = () => {
-  const [isSupported, setIsSupported] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -11,17 +11,52 @@ export const useServiceWorker = () => {
   useEffect(() => {
     // Verificar si Service Workers están soportados
     if ('serviceWorker' in navigator) {
-      setIsSupported(true);
       registerServiceWorker();
     } else {
       console.log('Service Workers no soportados en este navegador');
     }
   }, []);
 
+  useEffect(() => {
+    const setupMessaging = () => {
+      if ('serviceWorker' in navigator && 'Notification' in window) {
+        const messaging = getMessaging();
+
+        // Request permission
+        Notification.requestPermission()
+          .then(permission => {
+            if (permission === 'granted') {
+              getToken(messaging, {
+                vapidKey: import.meta.env.VITE_FCM_VAPID_KEY,
+              })
+                .then(token => {
+                  console.log('FCM Token:', token);
+                })
+                .catch(error => {
+                  console.error('Error getting FCM token:', error);
+                });
+            }
+          })
+          .catch(error => {
+            console.error('Error requesting notification permission:', error);
+          });
+
+        // Listen for messages
+        onMessage(messaging, payload => {
+          console.log('Foreground message:', payload);
+          // Note: useToast hook cannot be used here as it's not a React component
+          // This would need to be handled differently, perhaps through a global toast system
+        });
+      }
+    };
+
+    setupMessaging();
+  }, []);
+
   const registerServiceWorker = async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+        scope: '/',
       });
 
       console.log('✅ Service Worker registrado:', registration);
@@ -37,7 +72,10 @@ export const useServiceWorker = () => {
           setIsUpdating(true);
 
           newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            if (
+              newWorker.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
               setUpdateAvailable(true);
               setIsUpdating(false);
             }
@@ -46,7 +84,7 @@ export const useServiceWorker = () => {
       });
 
       // Escuchar mensajes del Service Worker
-      navigator.serviceWorker.addEventListener('message', (event) => {
+      navigator.serviceWorker.addEventListener('message', event => {
         const { type, data } = event.data;
 
         switch (type) {
@@ -60,7 +98,6 @@ export const useServiceWorker = () => {
             console.log('Mensaje del SW:', type, data);
         }
       });
-
     } catch (error) {
       console.error('❌ Error registrando Service Worker:', error);
     }
@@ -76,17 +113,16 @@ export const useServiceWorker = () => {
 
   const getCacheInfo = async () => {
     if (registration && registration.active) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         const messageChannel = new MessageChannel();
 
-        messageChannel.port1.onmessage = (event) => {
+        messageChannel.port1.onmessage = event => {
           resolve(event.data);
         };
 
-        registration.active.postMessage(
-          { type: 'GET_CACHE_INFO' },
-          [messageChannel.port2]
-        );
+        registration.active.postMessage({ type: 'GET_CACHE_INFO' }, [
+          messageChannel.port2,
+        ]);
       });
     }
     return null;
@@ -97,7 +133,7 @@ export const useServiceWorker = () => {
       return new Promise((resolve, reject) => {
         const messageChannel = new MessageChannel();
 
-        messageChannel.port1.onmessage = (event) => {
+        messageChannel.port1.onmessage = event => {
           if (event.data.success) {
             resolve(true);
           } else {
@@ -105,23 +141,21 @@ export const useServiceWorker = () => {
           }
         };
 
-        registration.active.postMessage(
-          { type: 'CLEAR_CACHE' },
-          [messageChannel.port2]
-        );
+        registration.active.postMessage({ type: 'CLEAR_CACHE' }, [
+          messageChannel.port2,
+        ]);
       });
     }
     return false;
   };
 
-  const sendMessageToSW = (message) => {
+  const sendMessageToSW = message => {
     if (registration && registration.active) {
       registration.active.postMessage(message);
     }
   };
 
   return {
-    isSupported,
     isRegistered,
     isUpdating,
     updateAvailable,
@@ -129,6 +163,6 @@ export const useServiceWorker = () => {
     updateServiceWorker,
     getCacheInfo,
     clearCache,
-    sendMessageToSW
+    sendMessageToSW,
   };
 };

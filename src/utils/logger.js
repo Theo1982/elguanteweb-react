@@ -1,13 +1,19 @@
 // src/utils/logger.js
+import { db } from '../firebase.js';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
 class Logger {
   constructor() {
     this.levels = {
       ERROR: 0,
       WARN: 1,
       INFO: 2,
-      DEBUG: 3
+      DEBUG: 3,
     };
-    this.currentLevel = process.env.NODE_ENV === 'production' ? this.levels.INFO : this.levels.DEBUG;
+    this.currentLevel =
+      process.env.NODE_ENV === 'production'
+        ? this.levels.INFO
+        : this.levels.DEBUG;
   }
 
   // Formatear timestamp
@@ -17,12 +23,13 @@ class Logger {
 
   // Formatear mensaje de log
   formatMessage(level, message, meta = {}) {
-    return {
+    const logEntry = {
       timestamp: this.getTimestamp(),
       level,
       message,
-      ...meta
+      ...meta,
     };
+    return logEntry;
   }
 
   // Log de error
@@ -62,12 +69,17 @@ class Logger {
   }
 
   // Persistir logs (puede ser a archivo, base de datos, etc.)
-  persistLog(logEntry) {
-    // En desarrollo, solo console.log
-    // En producción, podría guardar a archivo o enviar a servicio de logging
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Implementar persistencia de logs para producción
-      // Ejemplo: escribir a archivo, enviar a servicio externo, etc.
+  async persistLog(logEntry) {
+    try {
+      // Always persist transaction-related logs to Firestore
+      if (logEntry.type && (logEntry.type.includes('payment') || logEntry.type.includes('transaction'))) {
+        await addDoc(collection(db, 'transactionLogs'), {
+          ...logEntry,
+          timestamp: serverTimestamp(),
+        });
+      }
+    } catch (error) {
+      console.error('Error persisting log:', error);
     }
   }
 
@@ -78,7 +90,7 @@ class Logger {
         this.info(`Starting ${operation}`, {
           operation,
           type: 'database_operation_start',
-          ...details
+          ...details,
         });
       },
 
@@ -86,7 +98,7 @@ class Logger {
         this.info(`${operation} completed successfully`, {
           operation,
           type: 'database_operation_success',
-          ...details
+          ...details,
         });
       },
 
@@ -96,7 +108,7 @@ class Logger {
           type: 'database_operation_error',
           error: error.message,
           stack: error.stack,
-          ...details
+          ...details,
         });
       },
 
@@ -106,9 +118,9 @@ class Logger {
           type: 'batch_progress',
           current,
           total,
-          ...details
+          ...details,
         });
-      }
+      },
     };
   }
 
@@ -121,7 +133,7 @@ class Logger {
           field,
           value: typeof value === 'object' ? JSON.stringify(value) : value,
           reason,
-          ...details
+          ...details,
         });
       },
 
@@ -130,9 +142,9 @@ class Logger {
           type: 'validation_summary',
           valid,
           invalid,
-          ...details
+          ...details,
         });
-      }
+      },
     };
   }
 }

@@ -8,7 +8,7 @@ export const formatPrice = (price, currency = 'ARS') => {
   if (typeof price !== 'number' || isNaN(price)) {
     return '$0';
   }
-  
+
   return new Intl.NumberFormat('es-AR', {
     style: 'currency',
     currency: currency,
@@ -22,11 +22,11 @@ export const formatPrice = (price, currency = 'ARS') => {
  * @param {number} number - Número a formatear
  * @returns {string} - Número formateado
  */
-export const formatNumber = (number) => {
+export const formatNumber = number => {
   if (typeof number !== 'number' || isNaN(number)) {
     return '0';
   }
-  
+
   return new Intl.NumberFormat('es-AR').format(number);
 };
 
@@ -38,20 +38,20 @@ export const formatNumber = (number) => {
  */
 export const formatDate = (date, options = {}) => {
   if (!date) return '';
-  
+
   const dateObj = date instanceof Date ? date : new Date(date);
-  
+
   if (isNaN(dateObj.getTime())) {
     return 'Fecha inválida';
   }
-  
+
   const defaultOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    ...options
+    ...options,
   };
-  
+
   return new Intl.DateTimeFormat('es-AR', defaultOptions).format(dateObj);
 };
 
@@ -60,7 +60,7 @@ export const formatDate = (date, options = {}) => {
  * @param {Date|string} date - Fecha a formatear
  * @returns {string} - Fecha y hora formateada
  */
-export const formatDateTime = (date) => {
+export const formatDateTime = date => {
   return formatDate(date, {
     year: 'numeric',
     month: 'short',
@@ -75,37 +75,37 @@ export const formatDateTime = (date) => {
  * @param {Date|string} date - Fecha a formatear
  * @returns {string} - Fecha relativa
  */
-export const formatRelativeDate = (date) => {
+export const formatRelativeDate = date => {
   if (!date) return '';
-  
+
   const dateObj = date instanceof Date ? date : new Date(date);
   const now = new Date();
   const diffInSeconds = Math.floor((now - dateObj) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return 'Hace unos segundos';
   }
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `Hace ${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''}`;
   }
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 30) {
     return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
   }
-  
+
   const diffInMonths = Math.floor(diffInDays / 30);
   if (diffInMonths < 12) {
     return `Hace ${diffInMonths} mes${diffInMonths > 1 ? 'es' : ''}`;
   }
-  
+
   const diffInYears = Math.floor(diffInMonths / 12);
   return `Hace ${diffInYears} año${diffInYears > 1 ? 's' : ''}`;
 };
@@ -119,9 +119,9 @@ export const formatRelativeDate = (date) => {
  */
 export const truncateText = (text, maxLength = 100, suffix = '...') => {
   if (!text || typeof text !== 'string') return '';
-  
+
   if (text.length <= maxLength) return text;
-  
+
   return text.substring(0, maxLength - suffix.length) + suffix;
 };
 
@@ -130,9 +130,9 @@ export const truncateText = (text, maxLength = 100, suffix = '...') => {
  * @param {string} text - Texto a capitalizar
  * @returns {string} - Texto capitalizado
  */
-export const capitalizeWords = (text) => {
+export const capitalizeWords = text => {
   if (!text || typeof text !== 'string') return '';
-  
+
   return text
     .toLowerCase()
     .split(' ')
@@ -145,9 +145,9 @@ export const capitalizeWords = (text) => {
  * @param {string} text - Texto a capitalizar
  * @returns {string} - Texto capitalizado
  */
-export const capitalizeFirst = (text) => {
+export const capitalizeFirst = text => {
   if (!text || typeof text !== 'string') return '';
-  
+
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 };
 
@@ -156,16 +156,17 @@ export const capitalizeFirst = (text) => {
  * @param {string} email - Email a formatear
  * @returns {string} - Email formateado
  */
-export const formatEmail = (email) => {
+export const formatEmail = email => {
   if (!email || typeof email !== 'string') return '';
-  
+
   const [localPart, domain] = email.split('@');
   if (!domain) return email;
-  
-  const maskedLocal = localPart.length > 2 
-    ? localPart.substring(0, 2) + '*'.repeat(localPart.length - 2)
-    : localPart;
-  
+
+  const maskedLocal =
+    localPart.length > 2
+      ? localPart.substring(0, 2) + '*'.repeat(localPart.length - 2)
+      : localPart;
+
   return `${maskedLocal}@${domain}`;
 };
 
@@ -174,12 +175,12 @@ export const formatEmail = (email) => {
  * @param {string} phone - Teléfono a formatear
  * @returns {string} - Teléfono formateado
  */
-export const formatPhone = (phone) => {
+export const formatPhone = phone => {
   if (!phone || typeof phone !== 'string') return '';
-  
+
   // Remover todos los caracteres no numéricos
   const cleaned = phone.replace(/\D/g, '');
-  
+
   // Formatear según la longitud
   if (cleaned.length === 10) {
     // Formato: (011) 1234-5678
@@ -188,7 +189,7 @@ export const formatPhone = (phone) => {
     // Formato: +54 (011) 1234-5678
     return `+54 (${cleaned.substring(2, 5)}) ${cleaned.substring(5, 9)}-${cleaned.substring(9)}`;
   }
-  
+
   return phone; // Devolver original si no coincide con patrones conocidos
 };
 
@@ -200,13 +201,13 @@ export const formatPhone = (phone) => {
  */
 export const formatFileSize = (bytes, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
@@ -218,7 +219,7 @@ export const formatFileSize = (bytes, decimals = 2) => {
  */
 export const formatPercentage = (value, isDecimal = false) => {
   if (typeof value !== 'number' || isNaN(value)) return '0%';
-  
+
   const percentage = isDecimal ? value * 100 : value;
   return `${Math.round(percentage)}%`;
 };
@@ -228,9 +229,9 @@ export const formatPercentage = (value, isDecimal = false) => {
  * @param {string} url - URL a formatear
  * @returns {string} - URL formateada
  */
-export const formatUrl = (url) => {
+export const formatUrl = url => {
   if (!url || typeof url !== 'string') return '';
-  
+
   try {
     const urlObj = new URL(url);
     return urlObj.hostname + urlObj.pathname;
@@ -244,40 +245,42 @@ export const formatUrl = (url) => {
  * @param {string} status - Estado del pedido
  * @returns {object} - { text: string, color: string, icon: string }
  */
-export const formatOrderStatus = (status) => {
+export const formatOrderStatus = status => {
   const statusMap = {
     pending: {
       text: 'Pendiente',
       color: '#f59e0b',
-      icon: '⏳'
+      icon: '⏳',
     },
     approved: {
       text: 'Aprobado',
       color: '#10b981',
-      icon: '✅'
+      icon: '✅',
     },
     rejected: {
       text: 'Rechazado',
       color: '#ef4444',
-      icon: '❌'
+      icon: '❌',
     },
     cancelled: {
       text: 'Cancelado',
       color: '#6b7280',
-      icon: '🚫'
+      icon: '🚫',
     },
     refunded: {
       text: 'Reembolsado',
       color: '#8b5cf6',
-      icon: '💰'
+      icon: '💰',
+    },
+  };
+
+  return (
+    statusMap[status] || {
+      text: capitalizeFirst(status),
+      color: '#6b7280',
+      icon: '❓',
     }
-  };
-  
-  return statusMap[status] || {
-    text: capitalizeFirst(status),
-    color: '#6b7280',
-    icon: '❓'
-  };
+  );
 };
 
 /**
@@ -285,34 +288,34 @@ export const formatOrderStatus = (status) => {
  * @param {number} points - Puntos del usuario
  * @returns {object} - { level: string, color: string, icon: string, discount: number }
  */
-export const formatUserLevel = (points) => {
+export const formatUserLevel = points => {
   if (points >= 100) {
     return {
       level: 'Oro',
       color: '#ffd700',
       icon: '🥇',
-      discount: 15
+      discount: 15,
     };
   } else if (points >= 50) {
     return {
       level: 'Plata',
       color: '#c0c0c0',
       icon: '🥈',
-      discount: 10
+      discount: 10,
     };
   } else if (points >= 25) {
     return {
       level: 'Bronce',
       color: '#cd7f32',
       icon: '🥉',
-      discount: 5
+      discount: 5,
     };
   } else {
     return {
       level: 'Sin nivel',
       color: '#6b7280',
       icon: '⭐',
-      discount: 0
+      discount: 0,
     };
   }
 };

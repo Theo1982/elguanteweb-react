@@ -8,24 +8,24 @@ vi.mock('firebase/firestore', () => ({
   collection: vi.fn(),
   writeBatch: vi.fn(() => ({
     set: vi.fn(),
-    commit: vi.fn().mockResolvedValue()
+    commit: vi.fn().mockResolvedValue(),
   })),
   getDocs: vi.fn(() => Promise.resolve({ size: 0, forEach: vi.fn() })),
   doc: vi.fn(),
-  addDoc: vi.fn().mockResolvedValue({ id: 'test-id' })
+  addDoc: vi.fn().mockResolvedValue({ id: 'test-id' }),
 }));
 
 vi.mock('dotenv', () => ({
   default: {
-    config: vi.fn()
-  }
+    config: vi.fn(),
+  },
 }));
 
 vi.mock('fs', () => ({
   default: {
     readFileSync: vi.fn(),
-    writeFileSync: vi.fn()
-  }
+    writeFileSync: vi.fn(),
+  },
 }));
 
 // Mock del logger
@@ -34,19 +34,19 @@ vi.mock('../utils/logger.js', () => ({
     createDatabaseLogger: vi.fn(() => ({
       start: vi.fn(),
       success: vi.fn(),
-      error: vi.fn()
+      error: vi.fn(),
     })),
     warn: vi.fn(),
     info: vi.fn(),
-    error: vi.fn()
-  }
+    error: vi.fn(),
+  },
 }));
 
 // Mock del inventory validator
 vi.mock('../utils/inventoryValidator.js', () => ({
   createInventoryValidator: vi.fn(() => ({
-    validateProductData: vi.fn(() => ({ isValid: true, errors: [] }))
-  }))
+    validateProductData: vi.fn(() => ({ isValid: true, errors: [] })),
+  })),
 }));
 
 describe('Integration Tests', () => {
@@ -61,23 +61,23 @@ describe('Integration Tests', () => {
       // Mock datos de entrada crudos
       const rawData = [
         {
-          "Handle": "test-product",
-          "Nombre": "  Producto de Prueba  ",
-          "Precio [El Guante]": "$1,500.50",
-          "En inventario [El Guante]": "  25  ",
-          "Categoria": "Electrónicos",
-          "Descripción": "Descripción de prueba",
-          "imagen": "  /img/test.jpg  "
+          Handle: 'test-product',
+          Nombre: '  Producto de Prueba  ',
+          'Precio [El Guante]': '$1,500.50',
+          'En inventario [El Guante]': '  25  ',
+          Categoria: 'Electrónicos',
+          Descripción: 'Descripción de prueba',
+          imagen: '  /img/test.jpg  ',
         },
         {
-          "Handle": "invalid-product",
-          "Nombre": "",
-          "Precio [El Guante]": "invalid",
-          "En inventario [El Guante]": "abc",
-          "Categoria": "",
-          "Descripción": "",
-          "imagen": ""
-        }
+          Handle: 'invalid-product',
+          Nombre: '',
+          'Precio [El Guante]': 'invalid',
+          'En inventario [El Guante]': 'abc',
+          Categoria: '',
+          Descripción: '',
+          imagen: '',
+        },
       ];
 
       readFileSync.mockReturnValue(JSON.stringify(rawData));
@@ -87,7 +87,7 @@ describe('Integration Tests', () => {
         normalizarPrecio,
         normalizarStock,
         normalizarTexto,
-        validarProductoNormalizado
+        validarProductoNormalizado,
       } = await import('../../scripts/normalizeData.js');
 
       // Simular el flujo de procesamiento
@@ -97,7 +97,7 @@ describe('Integration Tests', () => {
         stock: normalizarStock(product['En inventario [El Guante]']),
         categoria: normalizarTexto(product['Categoria']),
         descripcion: normalizarTexto(product['Descripción']),
-        imagen: normalizarTexto(product['imagen'])
+        imagen: normalizarTexto(product['imagen']),
       }));
 
       // Verificar producto válido
@@ -131,8 +131,12 @@ describe('Integration Tests', () => {
         throw new Error('File system error');
       });
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const exitSpy = vi
+        .spyOn(global.process, 'exit')
+        .mockImplementation(() => {});
 
       // Intentar importar el script debería manejar el error
       try {
@@ -156,8 +160,12 @@ describe('Integration Tests', () => {
         throw new Error('Firebase initialization failed');
       });
 
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const exitSpy = vi
+        .spyOn(global.process, 'exit')
+        .mockImplementation(() => {});
 
       try {
         await import('../../scripts/populateFirestore.js');
@@ -178,7 +186,7 @@ describe('Integration Tests', () => {
 
       const mockBatch = {
         set: vi.fn(),
-        commit: vi.fn().mockResolvedValue()
+        commit: vi.fn().mockResolvedValue(),
       };
 
       writeBatch.mockReturnValue(mockBatch);
@@ -187,7 +195,7 @@ describe('Integration Tests', () => {
       const products = [
         { nombre: 'Producto 1', precio: 100, stock: 10, categoria: 'Test' },
         { nombre: 'Producto 2', precio: 200, stock: 20, categoria: 'Test' },
-        { nombre: 'Producto 3', precio: 300, stock: 30, categoria: 'Test' }
+        { nombre: 'Producto 3', precio: 300, stock: 30, categoria: 'Test' },
       ];
 
       const BATCH_SIZE = 2;

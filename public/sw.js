@@ -219,7 +219,8 @@ self.addEventListener('message', (event) => {
       break;
 
     default:
-      console.log('Mensaje no reconocido:', type);
+      // Silenciar mensajes no reconocidos para evitar spam en consola
+      // console.log('Mensaje no reconocido:', type);
   }
 });
 

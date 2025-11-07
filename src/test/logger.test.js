@@ -76,7 +76,9 @@ describe('Logger', () => {
       dbLogger.success(details);
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO]: test_operation completed successfully'),
+        expect.stringContaining(
+          '[INFO]: test_operation completed successfully'
+        ),
         expect.objectContaining(details)
       );
     });
@@ -92,7 +94,7 @@ describe('Logger', () => {
         expect.stringContaining('[ERROR]: test_operation failed'),
         expect.objectContaining({
           error: 'Test error',
-          ...details
+          ...details,
         })
       );
     });
@@ -109,17 +111,22 @@ describe('Logger', () => {
     it('should log invalid data', () => {
       const validationLogger = logger.createValidationLogger();
 
-      validationLogger.invalidData('email', 'invalid-email', 'Formato inválido', {
-        field: 'userEmail',
-        attempt: 1
-      });
+      validationLogger.invalidData(
+        'email',
+        'invalid-email',
+        'Formato inválido',
+        {
+          field: 'userEmail',
+          attempt: 1,
+        }
+      );
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[WARN]: Invalid data in field \'email\''),
+        expect.stringContaining("[WARN]: Invalid data in field 'email'"),
         expect.objectContaining({
           field: 'email',
           value: 'invalid-email',
-          reason: 'Formato inválido'
+          reason: 'Formato inválido',
         })
       );
     });
@@ -130,7 +137,9 @@ describe('Logger', () => {
       validationLogger.validationSummary(95, 5, { totalRecords: 100 });
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[INFO]: Validation completed: 95 valid, 5 invalid'),
+        expect.stringContaining(
+          '[INFO]: Validation completed: 95 valid, 5 invalid'
+        ),
         expect.objectContaining({ totalRecords: 100 })
       );
     });

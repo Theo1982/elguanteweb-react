@@ -1,10 +1,16 @@
 // src/pages/AdminUsers.jsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { collection, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import "./Admin.css";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  deleteDoc,
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import './Admin.css';
 
 export default function AdminUsers() {
   const navigate = useNavigate();
@@ -12,32 +18,32 @@ export default function AdminUsers() {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [nuevoUsuario, setNuevoUsuario] = useState({
-    nombre: "",
-    email: "",
-    password: "",
-    role: "usuario",
+    nombre: '',
+    email: '',
+    password: '',
+    role: 'usuario',
   });
   const [creandoUsuario, setCreandoUsuario] = useState(false);
 
   // Verificar role
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !profile || profile.role !== "admin") {
-      navigate("/login");
+    if (!user || !profile || profile.role !== 'admin') {
+      navigate('/login');
     }
   }, [user, profile, authLoading, navigate]);
 
   // 🔄 Cargar todos los usuarios
   const fetchUsuarios = async () => {
     try {
-      const snapshot = await getDocs(collection(db, "usuarios"));
-      const usersData = snapshot.docs.map((doc) => ({
+      const snapshot = await getDocs(collection(db, 'usuarios'));
+      const usersData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
       setUsuarios(usersData);
     } catch (error) {
-      console.error("❌ Error cargando usuarios:", error);
+      console.error('❌ Error cargando usuarios:', error);
     } finally {
       setLoading(false);
     }
@@ -50,51 +56,56 @@ export default function AdminUsers() {
   // 🔄 Cambiar rol
   const cambiarRol = async (id, nuevoRol) => {
     try {
-      const ref = doc(db, "usuarios", id);
+      const ref = doc(db, 'usuarios', id);
       await updateDoc(ref, { role: nuevoRol });
       alert(`✅ Rol actualizado a ${nuevoRol}`);
       fetchUsuarios(); // refrescar lista
     } catch (error) {
-      console.error("❌ Error cambiando rol:", error);
-      alert("Error al cambiar el rol");
+      console.error('❌ Error cambiando rol:', error);
+      alert('Error al cambiar el rol');
     }
   };
 
   // 🗑️ Eliminar usuario
-  const eliminarUsuario = async (id) => {
-    if (!window.confirm("⚠️ ¿Seguro que deseas eliminar este usuario?")) return;
+  const eliminarUsuario = async id => {
+    if (!window.confirm('⚠️ ¿Seguro que deseas eliminar este usuario?')) return;
 
     try {
-      const ref = doc(db, "usuarios", id);
+      const ref = doc(db, 'usuarios', id);
       await deleteDoc(ref);
-      alert("🗑️ Usuario eliminado con éxito");
+      alert('🗑️ Usuario eliminado con éxito');
       fetchUsuarios(); // refrescar lista
     } catch (error) {
-      console.error("❌ Error eliminando usuario:", error);
-      alert("Error al eliminar el usuario");
+      console.error('❌ Error eliminando usuario:', error);
+      alert('Error al eliminar el usuario');
     }
   };
 
   // ➕ Crear nuevo usuario
-  const handleCreateChange = (e) => {
+  const handleCreateChange = e => {
     setNuevoUsuario({ ...nuevoUsuario, [e.target.name]: e.target.value });
   };
 
-  const handleCreate = async (e) => {
+  const handleCreate = async e => {
     e.preventDefault();
-    if (!nuevoUsuario.nombre || !nuevoUsuario.email || !nuevoUsuario.password) return;
+    if (!nuevoUsuario.nombre || !nuevoUsuario.email || !nuevoUsuario.password)
+      return;
 
     setCreandoUsuario(true);
     try {
       // Use AuthContext signup to create user with Firebase Auth and Firestore document
-      await signup(nuevoUsuario.email, nuevoUsuario.password, nuevoUsuario.nombre);
+      await signup(
+        nuevoUsuario.email,
+        nuevoUsuario.password,
+        nuevoUsuario.nombre
+      );
 
-      alert("✅ Usuario creado con éxito");
-      setNuevoUsuario({ nombre: "", email: "", password: "", role: "usuario" });
+      alert('✅ Usuario creado con éxito');
+      setNuevoUsuario({ nombre: '', email: '', password: '', role: 'usuario' });
       fetchUsuarios(); // refrescar lista
     } catch (error) {
-      console.error("❌ Error creando usuario:", error);
-      alert("Error al crear el usuario: " + error.message);
+      console.error('❌ Error creando usuario:', error);
+      alert('Error al crear el usuario: ' + error.message);
     } finally {
       setCreandoUsuario(false);
     }
@@ -144,7 +155,7 @@ export default function AdminUsers() {
           <option value="admin">Administrador</option>
         </select>
         <button type="submit" disabled={creandoUsuario} className="btn-submit">
-          {creandoUsuario ? "Creando..." : "➕ Crear Usuario"}
+          {creandoUsuario ? 'Creando...' : '➕ Crear Usuario'}
         </button>
       </form>
 
@@ -159,24 +170,33 @@ export default function AdminUsers() {
           </tr>
         </thead>
         <tbody>
-          {usuarios.map((u) => (
+          {usuarios.map(u => (
             <tr key={u.id}>
               <td className="admin-td">{u.id}</td>
               <td className="admin-td">{u.nombre}</td>
               <td className="admin-td">{u.email}</td>
               <td className="admin-td">{u.role}</td>
               <td className="admin-td">
-                {u.role !== "admin" && (
-                  <button onClick={() => cambiarRol(u.id, "admin")} className="btn-edit">
+                {u.role !== 'admin' && (
+                  <button
+                    onClick={() => cambiarRol(u.id, 'admin')}
+                    className="btn-edit"
+                  >
                     🔑 Hacer Admin
                   </button>
                 )}
-                {u.role !== "usuario" && (
-                  <button onClick={() => cambiarRol(u.id, "usuario")} className="btn-secondary">
+                {u.role !== 'usuario' && (
+                  <button
+                    onClick={() => cambiarRol(u.id, 'usuario')}
+                    className="btn-secondary"
+                  >
                     👤 Hacer Usuario
                   </button>
                 )}
-                <button onClick={() => eliminarUsuario(u.id)} className="btn-delete">
+                <button
+                  onClick={() => eliminarUsuario(u.id)}
+                  className="btn-delete"
+                >
                   🗑️ Eliminar
                 </button>
               </td>

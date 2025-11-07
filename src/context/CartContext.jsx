@@ -1,9 +1,13 @@
 // src/context/CartContext.jsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
+  CartProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +38,7 @@ export function CartProvider({ children }) {
     }
   }, [cart, loading]);
 
-  const addToCart = (product) => {
+  const addToCart = product => {
     if (!product || !product.id) {
       console.error('Invalid product:', product);
       return;
@@ -42,11 +46,13 @@ export function CartProvider({ children }) {
 
     const variant = product.variant || '';
 
-    setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.id === product.id && item.variant === variant);
+    setCart(prevCart => {
+      const existing = prevCart.find(
+        item => item.id === product.id && item.variant === variant
+      );
 
       if (existing) {
-        return prevCart.map((item) =>
+        return prevCart.map(item =>
           item.id === product.id && item.variant === variant
             ? { ...item, quantity: item.quantity + 1 }
             : item
@@ -61,6 +67,7 @@ export function CartProvider({ children }) {
           imagen: product.imagen || '/img/placeholder.jpg',
           descripcion: product.descripcion || '',
           quantity: 1,
+          notes: '',
         };
 
         return [...prevCart, newItem];
@@ -68,15 +75,27 @@ export function CartProvider({ children }) {
     });
   };
 
-  const removeFromCart = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  const removeFromCart = (id, variant) => {
+    setCart(prevCart =>
+      prevCart.filter(item => !(item.id === id && item.variant === variant))
+    );
   };
 
-  const updateQuantity = (id, quantity) => {
+  const updateQuantity = (id, variant, quantity) => {
     const newQuantity = Math.max(1, Math.min(99, Number(quantity) || 1));
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.id === id && item.variant === variant
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+  };
+
+  const updateNotes = (id, variant, notes) => {
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.id === id && item.variant === variant ? { ...item, notes } : item
       )
     );
   };
@@ -86,35 +105,36 @@ export function CartProvider({ children }) {
   };
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => total + (item.precio * item.quantity), 0);
+    return cart.reduce((total, item) => total + item.precio * item.quantity, 0);
   };
 
   const getCartItemsCount = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const isInCart = (productId) => {
+  const isInCart = productId => {
     return cart.some(item => item.id === productId);
   };
 
-  const getItemQuantity = (productId) => {
+  const getItemQuantity = productId => {
     const item = cart.find(item => item.id === productId);
     return item ? item.quantity : 0;
   };
 
   return (
     <CartContext.Provider
-      value={{ 
-        cart, 
+      value={{
+        cart,
         loading,
-        addToCart, 
-        removeFromCart, 
-        updateQuantity, 
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        updateNotes,
         clearCart,
         getCartTotal,
         getCartItemsCount,
         isInCart,
-        getItemQuantity
+        getItemQuantity,
       }}
     >
       {children}

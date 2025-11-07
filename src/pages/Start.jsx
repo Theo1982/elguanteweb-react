@@ -1,55 +1,57 @@
 // src/pages/Start.jsx
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import { useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 export default function Start() {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate("/shop");
+    navigate('/shop');
   };
 
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        background: "#87CEEB",
-        fontFamily: "Arial, sans-serif",
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: '#87CEEB',
+        fontFamily: 'Arial, sans-serif',
       }}
     >
       <div
         style={{
-          textAlign: "center",
+          textAlign: 'center',
         }}
       >
         <img
           src={logo}
-          alt="El Guante - Productos de Limpieza"
+          alt="El Guante Web Logo"
           onClick={handleClick}
           style={{
-            width: "300px",
-            height: "auto",
-            cursor: "pointer",
-            transition: "all 0.3s ease-in-out",
-            animation: "fadeInUp 1s ease-out 0.5s both, pulse 2s infinite",
+            width: '250px',
+            height: '250px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease-in-out',
+            animation: 'fadeInUp 1s ease-out 0.5s both, pulse 2s infinite',
+            borderRadius: '50%',
+            objectFit: 'cover',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.05) translateY(-10px)";
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'scale(1.05) translateY(-10px)';
           }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1) translateY(0)";
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'scale(1) translateY(0)';
           }}
         />
-
-
+        <p style={{ color: '#fff', marginTop: '20px', fontSize: '16px' }}>
+          Haz clic en el logo para comenzar
+        </p>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
