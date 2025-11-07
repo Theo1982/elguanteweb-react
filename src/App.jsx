@@ -39,6 +39,8 @@ const Orders = lazy(() => import('./pages/Orders'));
 const AdminOrders = lazy(() => import('./pages/AdminOrders'));
 const Referrals = lazy(() => import('./pages/Referrals'));
 const Coupons = lazy(() => import('./pages/Coupons'));
+const NewsletterAdmin = lazy(() => import('./pages/NewsletterAdmin'));
+const ModerationAdmin = lazy(() => import('./pages/ModerationAdmin'));
 
 function AppContent() {
   useCreateUserDoc();
@@ -169,6 +171,22 @@ function AppContent() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route
+                      path="/admin-newsletter"
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <NewsletterAdmin />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin-moderation"
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <ModerationAdmin />
+                        </ProtectedRoute>
+                      }
+                    />
 
                     {/* Ruta 404 */}
                     <Route
@@ -197,7 +215,7 @@ export default function App() {
       <AuthProvider>
         <CartProvider>
           <FavoritesProvider>
-            <ToastContainer />
+            <ToastContainer toasts={[]} onRemoveToast={() => {}} />
             <AppContent />
           </FavoritesProvider>
         </CartProvider>

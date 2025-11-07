@@ -10,8 +10,6 @@ import StarRating from '../components/StarRating';
 
 export default function Success() {
   const params = new URLSearchParams(useLocation().search);
-  const paymentId = params.get('payment_id');
-  const status = params.get('status');
   const puntos = params.get('points') || 0;
   const nivel = params.get('level') || 'Sin nivel';
   const { cart, clearCart } = useCart();
@@ -20,7 +18,6 @@ export default function Success() {
   const [purchasedItems, setPurchasedItems] = useState([]);
   const [reviews, setReviews] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [orderVerified, setOrderVerified] = useState(false);
 
   useEffect(() => {
     // Capture purchased items and clear cart on success
@@ -33,43 +30,7 @@ export default function Success() {
 
   // ✅ FIXED: Remove duplicate order saving - orders are now created in PaymentModal
   // The webhook will handle status updates and inventory reduction
-  useEffect(() => {
-    if (
-      paymentId &&
-      status === 'approved' &&
-      purchasedItems.length > 0 &&
-      user &&
-      !orderVerified
-    ) {
-      // Verify payment with backend (this will be implemented)
-      const verifyPayment = async () => {
-        try {
-          const response = await fetch(
-            `http://localhost:3001/verify-payment/${paymentId}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (response.ok) {
-            setOrderVerified(true);
-            addToast('Pago verificado exitosamente', 'success');
-          } else {
-            addToast('Verificando pago...', 'info');
-          }
-        } catch (error) {
-          console.error('Error verifying payment:', error);
-          // For demo purposes, assume success
-          setOrderVerified(true);
-        }
-      };
-
-      verifyPayment();
-    }
-  }, [paymentId, status, purchasedItems, user, orderVerified, addToast]);
+  // Payment verification is handled by webhooks automatically
 
   const handleReviewSubmit = async productId => {
     if (!user) {

@@ -1,4 +1,7 @@
 // src/utils/logger.js
+import { db } from '../firebase.js';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
 class Logger {
   constructor() {
     this.levels = {
@@ -66,12 +69,17 @@ class Logger {
   }
 
   // Persistir logs (puede ser a archivo, base de datos, etc.)
-  persistLog() {
-    // En desarrollo, solo console.log
-    // En producción, podría guardar a archivo o enviar a servicio de logging
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Implementar persistencia de logs para producción
-      // Ejemplo: escribir a archivo, enviar a servicio externo, etc.
+  async persistLog(logEntry) {
+    try {
+      // Always persist transaction-related logs to Firestore
+      if (logEntry.type && (logEntry.type.includes('payment') || logEntry.type.includes('transaction'))) {
+        await addDoc(collection(db, 'transactionLogs'), {
+          ...logEntry,
+          timestamp: serverTimestamp(),
+        });
+      }
+    } catch (error) {
+      console.error('Error persisting log:', error);
     }
   }
 

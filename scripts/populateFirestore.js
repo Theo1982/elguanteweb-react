@@ -1,4 +1,3 @@
-// scripts/populateFirestore.js
 import admin from "firebase-admin";
 import fs from "fs";
 import dotenv from "dotenv";
@@ -24,7 +23,7 @@ for (const envVar of requiredEnvVars) {
 // Inicializar Firebase Admin SDK
 let serviceAccount;
 try {
-  serviceAccount = JSON.parse(fs.readFileSync('./serviceAccountKey.json', 'utf8'));
+  serviceAccount = require('./serviceAccountKey.json');
 } catch (error) {
   console.error('❌ Error: No se pudo cargar el archivo serviceAccountKey.json');
   console.error('Descarga la clave de servicio desde Firebase Console > Configuración del proyecto > Cuentas de servicio');

@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
+import { createInventoryValidator } from '../utils/inventoryValidator';
 
 const PaymentModal = ({ isOpen, onClose, cart, total, onPaymentComplete }) => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ const PaymentModal = ({ isOpen, onClose, cart, total, onPaymentComplete }) => {
   const [selectedMethod, setSelectedMethod] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const inventoryValidator = createInventoryValidator(db);
 
   const paymentMethods = [
     {
@@ -126,96 +128,176 @@ ${window.location.origin}/admin/confirm-payment/${orderData.id}
     if (!validateForm()) return;
 
     setLoading(true);
-    try {
-      const method = paymentMethods.find(m => m.id === selectedMethod);
+    let retryCount = 0;
+    const maxRetries = 2;
 
-      // Crear orden en Firestore
-      const orderData = {
-        userId: user.uid,
-        userEmail: user.email,
-        userName: user.displayName || user.email,
-        items: cart,
-        productIds: cart.map(item => item.id),
-        total: total,
-        paymentMethod: method.name,
-        status:
-          method.id === 'transferencia' || method.id === 'efectivo'
-            ? 'pending'
-            : 'processing',
-        timestamp: serverTimestamp(),
-        pointsEarned: Math.floor(total / 1000),
-        ...(phoneNumber && { phoneNumber }),
-      };
-
-      const orderRef = await addDoc(collection(db, 'orders'), orderData);
-
-      // ✅ FIXED: Add paymentId to order for webhook matching
-      const paymentId =
-        method.id === 'tarjeta' || method.id === 'link'
-          ? `payment_${orderRef.id}`
-          : null;
-      if (paymentId) {
-        await updateDoc(orderRef, { paymentId });
-        orderData.paymentId = paymentId;
-      }
-
-      // Para transferencia, enviar WhatsApp al admin
-      if (method.id === 'transferencia') {
-        await sendWhatsAppMessage({ ...orderData, id: orderRef.id });
-        addToast(
-          'Orden creada. Te contactaremos cuando confirmemos el pago.',
-          'info'
+    const attemptPayment = async () => {
+      try {
+        // ✅ FIXED: Validate inventory before payment
+        const inventoryValidation = await inventoryValidator.validateBatchStock(
+          cart.map(item => ({
+            productId: item.id,
+            quantity: item.quantity,
+          })),
+          'payment_validation'
         );
-      }
 
-      // Para efectivo, solo notificar
-      if (method.id === 'efectivo') {
-        addToast(
-          'Orden creada. El pago se realizará al momento de la entrega.',
-          'info'
-        );
-      }
+        if (inventoryValidation.invalid.length > 0) {
+          const errorMessages = inventoryValidation.invalid.map(
+            item => `${item.productId}: ${item.error}`
+          );
+          addToast(`Error de inventario: ${errorMessages.join(', ')}`, 'error');
+          return false;
+        }
 
-      // Para tarjeta/link, proceder con MercadoPago
-      if (method.id === 'tarjeta' || method.id === 'link') {
-        const response = await fetch(
-          'http://localhost:3001/create_preference',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              items: cart.map(item => ({
-                title: item.nombre,
-                unit_price: Number(item.precio),
-                quantity: item.quantity,
-                currency_id: 'ARS',
-                description: item.notes || '',
-              })),
-              usuarioId: user.uid,
-              metadata: { total, orderId: orderRef.id },
-            }),
+        // Show warnings for low stock
+        if (inventoryValidation.warnings.length > 0) {
+          const warningMessages = inventoryValidation.warnings.map(
+            warning => `${warning.productName} (quedan ${warning.currentStock})`
+          );
+          addToast(`Stock bajo: ${warningMessages.join(', ')}`, 'warning');
+        }
+
+        const method = paymentMethods.find(m => m.id === selectedMethod);
+
+        // ✅ Order Status Consistency: Validate status transitions
+        const getInitialStatus = (methodId) => {
+          switch (methodId) {
+            case 'transferencia':
+            case 'efectivo':
+              return 'pending';
+            case 'tarjeta':
+            case 'link':
+              return 'processing';
+            default:
+              return 'pending';
           }
-        );
+        };
 
-        if (!response.ok) {
-          throw new Error('Error creando preferencia de pago');
+        // Crear orden en Firestore
+        const orderData = {
+          userId: user.uid,
+          userEmail: user.email,
+          userName: user.displayName || user.email,
+          items: cart,
+          productIds: cart.map(item => item.id),
+          total: total,
+          paymentMethod: method.name,
+          status: getInitialStatus(method.id),
+          timestamp: serverTimestamp(),
+          pointsEarned: Math.floor(total / 1000),
+          ...(phoneNumber && { phoneNumber }),
+        };
+
+        const orderRef = await addDoc(collection(db, 'orders'), orderData);
+
+        // ✅ FIXED: Add paymentId to order for webhook matching
+        const paymentId =
+          method.id === 'tarjeta' || method.id === 'link'
+            ? `payment_${orderRef.id}`
+            : null;
+        if (paymentId) {
+          await updateDoc(orderRef, { paymentId });
+          orderData.paymentId = paymentId;
         }
 
-        const data = await response.json();
-        if (data.init_point) {
-          window.location.href = data.init_point;
-          return;
+        // Para transferencia, enviar WhatsApp al admin
+        if (method.id === 'transferencia') {
+          await sendWhatsAppMessage({ ...orderData, id: orderRef.id });
+          addToast(
+            'Orden creada. Te contactaremos cuando confirmemos el pago.',
+            'info'
+          );
         }
+
+        // Para efectivo, solo notificar
+        if (method.id === 'efectivo') {
+          addToast(
+            'Orden creada. El pago se realizará al momento de la entrega.',
+            'info'
+          );
+        }
+
+        // Para tarjeta/link, proceder con MercadoPago
+        if (method.id === 'tarjeta' || method.id === 'link') {
+          const response = await fetch(
+            'http://localhost:3001/create_preference',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                items: cart.map(item => ({
+                  title: item.nombre,
+                  unit_price: Number(item.precio),
+                  quantity: item.quantity,
+                  currency_id: 'ARS',
+                  description: item.notes || '',
+                })),
+                usuarioId: user.uid,
+                metadata: { total, orderId: orderRef.id },
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Error MercadoPago: ${response.status} - ${errorData.error || 'Error desconocido'}`);
+          }
+
+          const data = await response.json();
+          if (data.init_point) {
+            window.location.href = data.init_point;
+            return true;
+          } else {
+            throw new Error('No se pudo generar el link de pago');
+          }
+        }
+
+        // Para métodos que no requieren redirección, cerrar modal y notificar
+        onPaymentComplete(orderRef.id);
+        onClose();
+        return true;
+
+      } catch (error) {
+        console.error('Error processing payment:', error);
+
+        // ✅ Payment Error Handling: Enhanced error categorization and user-friendly messages
+        const categorizeError = (error) => {
+          if (error.message.includes('MercadoPago') || error.message.includes('create_preference')) {
+            return { type: 'payment_service', message: 'Error con el servicio de pagos. Intente nuevamente.', retryable: true };
+          } else if (error.message.includes('network') || error.message.includes('fetch') || error.message.includes('timeout')) {
+            return { type: 'network', message: 'Error de conexión. Verifique su internet.', retryable: true };
+          } else if (error.message.includes('inventory') || error.message.includes('stock')) {
+            return { type: 'inventory', message: 'Error de inventario. Algunos productos ya no están disponibles.', retryable: false };
+          } else if (error.message.includes('validation') || error.message.includes('invalid')) {
+            return { type: 'validation', message: 'Datos inválidos. Verifique la información.', retryable: false };
+          } else {
+            return { type: 'unknown', message: 'Error procesando el pago. Intente nuevamente.', retryable: true };
+          }
+        };
+
+        const errorInfo = categorizeError(error);
+        addToast(errorInfo.message, 'error');
+
+        // ✅ Improved retry logic with exponential backoff
+        if (retryCount < maxRetries && errorInfo.retryable) {
+          retryCount++;
+          const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 5000); // Exponential backoff, max 5s
+          addToast(`Reintentando en ${delay/1000}s... (${retryCount}/${maxRetries})`, 'info');
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return attemptPayment();
+        }
+
+        return false;
       }
+    };
 
-      // Para métodos que no requieren redirección, cerrar modal y notificar
-      onPaymentComplete(orderRef.id);
-      onClose();
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      addToast('Error procesando el pago', 'error');
-    } finally {
-      setLoading(false);
+    const success = await attemptPayment();
+    setLoading(false);
+
+    if (!success) {
+      // Offer recovery options
+      addToast('¿Desea intentar con otro método de pago?', 'info');
     }
   };
 

@@ -1,4 +1,20 @@
-- [x] Update CartContext.jsx: Add notes field to cart items and updateNotes function
-- [x] Update Cart.jsx: Add textarea for "Detalles del producto" and handle notes changes
-- [x] Update handleCheckout in Cart.jsx to include notes in items sent to backend
-- [x] Test the feature by adding products to cart and entering details
+# TODO: Implement Important Payment Fixes
+
+## 🔄 Order Status Consistency
+- [ ] Add status validation in PaymentModal.jsx
+- [ ] Ensure webhook correctly updates status transitions
+- [ ] Add status transition checks in server.js
+
+## 🚨 Payment Error Handling
+- [ ] Enhance error categorization in PaymentModal.jsx
+- [ ] Add user-friendly error messages
+- [ ] Improve retry logic with exponential backoff
+
+## 📊 Transaction Logging
+- [ ] Modify logger.js to persist logs to Firestore 'transactionLogs' collection
+- [ ] Integrate detailed logging in server.js for all payment events
+
+## ⏰ Payment Timeout Handling
+- [ ] Add function in server.js to cancel pending orders after 24 hours
+- [ ] Restore inventory on timeout
+- [ ] Notify users of cancelled orders

@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 class WhatsAppService {
   constructor() {
@@ -81,4 +81,4 @@ ${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin/confirm-payment/${o
   }
 }
 
-module.exports = new WhatsAppService();
+export default new WhatsAppService();

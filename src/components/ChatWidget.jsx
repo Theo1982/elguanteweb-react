@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '../hooks/useChat';
-import LoadingSpinner from './LoadingSpinner';
 
 export default function ChatWidget() {
   const {
@@ -11,7 +10,6 @@ export default function ChatWidget() {
     messagesEndRef,
     sendMessage,
     toggleChat,
-    clearUnread,
   } = useChat();
 
   const [inputMessage, setInputMessage] = useState('');

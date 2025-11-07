@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 import mercadopago from "mercadopago";
 import rateLimit from "express-rate-limit";
 import crypto from "crypto";
+import cron from "node-cron";
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, getDocs, updateDoc, doc, getDoc, increment } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, updateDoc, doc, getDoc, increment, Timestamp } from 'firebase/firestore';
 
 dotenv.config();
 
@@ -22,7 +23,7 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
-// ✅ FIXED: Points system function
+// ✅ FIXED: Improved Points system function with proper userPoints collection
 const awardUserPoints = async (userId, points, reason) => {
   try {
     const userPointsRef = doc(db, 'userPoints', userId);
@@ -31,13 +32,23 @@ const awardUserPoints = async (userId, points, reason) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000); // 60 days
 
+    // Calculate level based on points
+    const calculateLevel = (totalPoints) => {
+      if (totalPoints >= 100) return 'Oro';
+      if (totalPoints >= 50) return 'Plata';
+      if (totalPoints >= 25) return 'Bronce';
+      return 'Sin nivel';
+    };
+
     if (userPointsDoc.exists()) {
       // Update existing points
       const currentData = userPointsDoc.data();
       const newPoints = (currentData.points || 0) + points;
+      const newLevel = calculateLevel(newPoints);
 
       await updateDoc(userPointsRef, {
         points: newPoints,
+        level: newLevel,
         history: [...(currentData.history || []), {
           date: now.toISOString(),
           points: points,
@@ -48,10 +59,11 @@ const awardUserPoints = async (userId, points, reason) => {
       });
     } else {
       // Create new points document
+      const newLevel = calculateLevel(points);
       await updateDoc(userPointsRef, {
         userId,
         points: points,
-        level: 'Bronce', // Will be calculated based on points
+        level: newLevel,
         history: [{
           date: now.toISOString(),
           points: points,
@@ -63,9 +75,90 @@ const awardUserPoints = async (userId, points, reason) => {
       });
     }
 
-    console.log(`✅ ${points} puntos otorgados a usuario ${userId}`);
+    console.log(`✅ ${points} puntos otorgados a usuario ${userId} - Nuevo total calculado`);
   } catch (error) {
     console.error('❌ Error otorgando puntos:', error);
+  }
+};
+
+// ✅ FIXED: Payment Timeout Handling - Function to cancel expired pending orders
+const cancelExpiredPendingOrders = async () => {
+  try {
+    console.log('🔍 Checking for expired pending orders...');
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const ordersRef = collection(db, 'orders');
+
+    // Query for pending orders older than 24 hours
+    const q = query(
+      ordersRef,
+      where('status', '==', 'pending'),
+      where('timestamp', '<', Timestamp.fromDate(twentyFourHoursAgo))
+    );
+
+    const querySnapshot = await getDocs(q);
+    let cancelledCount = 0;
+
+    for (const orderDoc of querySnapshot.docs) {
+      const orderData = orderDoc.data();
+
+      // Update order status to cancelled
+      await updateDoc(orderDoc.ref, {
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString(),
+        cancellationReason: 'timeout_expired'
+      });
+
+      // Restore inventory for each item
+      for (const item of orderData.items) {
+        const productRef = doc(db, 'productos', item.id);
+        const productDoc = await getDoc(productRef);
+
+        if (productDoc.exists()) {
+          const currentStock = productDoc.data().stock || 0;
+          await updateDoc(productRef, {
+            stock: currentStock + item.quantity
+          });
+        }
+      }
+
+      // Notify user via WhatsApp if phone number available
+      if (orderData.phoneNumber) {
+        try {
+          const whatsappService = await import('./whatsappService.js');
+          const message = `❌ *Orden Cancelada por Tiempo Expirado*
+
+Tu orden #${orderDoc.id} ha sido cancelada porque no se completó el pago dentro de las 24 horas.
+
+📦 *Productos devueltos al inventario:*
+${orderData.items.map(item => `• ${item.nombre} x${item.quantity}`).join('\n')}
+
+💰 *Total:* $${orderData.total}
+
+Si deseas volver a intentar la compra, puedes hacerlo desde la app.
+
+Gracias por tu comprensión.`;
+
+          await whatsappService.default.sendMessage(orderData.phoneNumber, message);
+        } catch (whatsappError) {
+          console.error('Error sending cancellation WhatsApp:', whatsappError);
+        }
+      }
+
+      console.log(`✅ Orden ${orderDoc.id} cancelada por timeout - Inventario restaurado`);
+      cancelledCount++;
+    }
+
+    if (cancelledCount > 0) {
+      console.log(`📊 ${cancelledCount} órdenes canceladas por timeout`);
+    } else {
+      console.log('✅ No hay órdenes pendientes expiradas');
+    }
+
+    return cancelledCount;
+  } catch (error) {
+    console.error('❌ Error cancelando órdenes expiradas:', error);
+    return 0;
   }
 };
 
@@ -231,6 +324,7 @@ app.post("/create_preference", paymentLimiter, validatePreferenceData, async (re
         success: `${baseUrl}/success`,
         failure: `${baseUrl}/failure`,
         pending: `${baseUrl}/pending`,
+
       },
       auto_return: "approved",
       metadata: {
@@ -447,13 +541,26 @@ app.post("/webhook/secure", express.raw({ type: 'application/json' }), async (re
       return res.status(401).send('Unauthorized');
     }
 
-    // Verify signature (simplified - MercadoPago uses HMAC-SHA256)
+    // MercadoPago signature format: x-signature: ts=123456789,v1=signature
+    const signatureParts = signature.split(', ');
+    const ts = signatureParts[0]?.split('=')[1];
+    const v1Signature = signatureParts[1]?.split('=')[1];
+
+    if (!ts || !v1Signature) {
+      console.log('❌ Formato de firma inválido');
+      return res.status(401).send('Invalid signature format');
+    }
+
+    // Create the payload to verify: ts + body
+    const payload = ts + req.body;
+
+    // Verify signature using HMAC-SHA256
     const expectedSignature = crypto
       .createHmac('sha256', secret)
-      .update(req.body)
+      .update(payload)
       .digest('hex');
 
-    if (signature !== `sha256=${expectedSignature}`) {
+    if (v1Signature !== expectedSignature) {
       console.log('❌ Firma de webhook inválida');
       return res.status(401).send('Invalid signature');
     }
@@ -579,6 +686,12 @@ app.use((req, res) => {
   });
 });
 
+// ✅ FIXED: Schedule payment timeout checks every hour
+cron.schedule('0 * * * *', async () => {
+  console.log('⏰ Running scheduled payment timeout check...');
+  await cancelExpiredPendingOrders();
+});
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 Recibida señal SIGTERM, cerrando servidor...');
@@ -594,4 +707,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend corriendo en http://localhost:${PORT}`);
   console.log(`📊 Health check disponible en http://localhost:${PORT}/health`);
   console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`⏰ Payment timeout checks scheduled every hour`);
 });

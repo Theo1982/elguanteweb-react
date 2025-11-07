@@ -108,7 +108,7 @@ const Navbar = memo(function Navbar() {
                   className={`navbar-link ${isActive('/admin') ? 'active' : ''}`}
                 >
                   <span aria-hidden="true">⚙️</span>
-                  <span>Admin</span>
+                  <span>Productos</span>
                 </Link>
                 <Link
                   to="/admin-users"
@@ -116,6 +116,27 @@ const Navbar = memo(function Navbar() {
                 >
                   <span aria-hidden="true">👥</span>
                   <span>Usuarios</span>
+                </Link>
+                <Link
+                  to="/admin-orders"
+                  className={`navbar-link ${isActive('/admin-orders') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">📦</span>
+                  <span>Pedidos</span>
+                </Link>
+                <Link
+                  to="/admin-newsletter"
+                  className={`navbar-link ${isActive('/admin-newsletter') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">📧</span>
+                  <span>Newsletter</span>
+                </Link>
+                <Link
+                  to="/admin-moderation"
+                  className={`navbar-link ${isActive('/admin-moderation') ? 'active' : ''}`}
+                >
+                  <span aria-hidden="true">🛡️</span>
+                  <span>Moderación</span>
                 </Link>
               </>
             )}
@@ -241,7 +262,7 @@ const Navbar = memo(function Navbar() {
                 className={`navbar-link navbar-mobile-link ${isActive('/admin') ? 'active' : ''}`}
               >
                 <span aria-hidden="true">⚙️</span>
-                <span>Admin</span>
+                <span>Productos</span>
               </Link>
               <Link
                 to="/admin-users"
@@ -249,6 +270,27 @@ const Navbar = memo(function Navbar() {
               >
                 <span aria-hidden="true">👥</span>
                 <span>Usuarios</span>
+              </Link>
+              <Link
+                to="/admin-orders"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-orders') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">📦</span>
+                <span>Pedidos</span>
+              </Link>
+              <Link
+                to="/admin-newsletter"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-newsletter') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">📧</span>
+                <span>Newsletter</span>
+              </Link>
+              <Link
+                to="/admin-moderation"
+                className={`navbar-link navbar-mobile-link ${isActive('/admin-moderation') ? 'active' : ''}`}
+              >
+                <span aria-hidden="true">🛡️</span>
+                <span>Moderación</span>
               </Link>
             </>
           )}
