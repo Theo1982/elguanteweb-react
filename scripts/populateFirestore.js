@@ -1,6 +1,5 @@
 // scripts/populateFirestore.js
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, writeBatch, getDocs, doc, addDoc, updateDoc } from "firebase/firestore";
+import admin from "firebase-admin";
 import fs from "fs";
 import dotenv from "dotenv";
 import { logger } from "../src/utils/logger.js";
@@ -11,12 +10,7 @@ dotenv.config({ path: '.env.local' });
 
 // Validar variables de entorno requeridas
 const requiredEnvVars = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_STORAGE_BUCKET',
-  'VITE_FIREBASE_MESSAGING_SENDER_ID',
-  'VITE_FIREBASE_APP_ID'
+  'VITE_FIREBASE_PROJECT_ID'
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -27,19 +21,22 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
-// Configuración de Firebase usando variables de entorno
-const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
-  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+// Inicializar Firebase Admin SDK
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(fs.readFileSync('./serviceAccountKey.json', 'utf8'));
+} catch (error) {
+  console.error('❌ Error: No se pudo cargar el archivo serviceAccountKey.json');
+  console.error('Descarga la clave de servicio desde Firebase Console > Configuración del proyecto > Cuentas de servicio');
+  process.exit(1);
+}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID
+});
+
+const db = admin.firestore();
 
 // Función para validar datos de producto
 function validarProducto(producto) {
@@ -128,13 +125,13 @@ async function agregarProductosBatch(productos, batchSize = 500) {
   let loteActual = 1;
 
   for (const batchProductos of batches) {
-    const batch = writeBatch(db);
+    const batch = db.batch();
     const loteIds = [];
 
     console.log(`📝 Preparando lote ${loteActual}/${batches.length} (${batchProductos.length} productos)...`);
 
     batchProductos.forEach((producto) => {
-      const docRef = doc(collection(db, "productos"));
+      const docRef = db.collection("productos").doc();
       batch.set(docRef, producto);
       loteIds.push(docRef.id);
     });
@@ -176,7 +173,7 @@ async function agregarProductosIndividualmente(productos, maxRetries = 3) {
 
     while (retryCount < maxRetries && !success) {
       try {
-        const docRef = await addDoc(collection(db, "productos"), producto);
+        const docRef = await db.collection("productos").add(producto);
         console.log(`✅ Producto agregado: ${producto.nombre} (ID: ${docRef.id})`);
         exitosos++;
         success = true;
@@ -213,7 +210,7 @@ async function poblarFirestore() {
     console.log(`📊 Total de productos a procesar: ${productosEjemplo.length}`);
 
     // Obtener productos existentes para actualizar en lugar de duplicar
-    const productosExistentesSnapshot = await getDocs(collection(db, "productos"));
+    const productosExistentesSnapshot = await db.collection("productos").get();
     const productosExistentes = {};
     productosExistentesSnapshot.forEach(doc => {
       const data = doc.data();
@@ -258,12 +255,12 @@ async function poblarFirestore() {
       if (productosExistentes[producto.handle]) {
         // Actualizar producto existente
         const existing = productosExistentes[producto.handle];
-        await updateDoc(doc(db, 'productos', existing.id), producto);
+        await db.collection('productos').doc(existing.id).update(producto);
         productosActualizados++;
         console.log(`🔄 Actualizado: ${producto.nombre}`);
       } else {
         // Agregar nuevo producto
-        await addDoc(collection(db, 'productos'), producto);
+        await db.collection('productos').add(producto);
         productosAgregados++;
         console.log(`➕ Agregado: ${producto.nombre}`);
       }
@@ -278,7 +275,7 @@ async function poblarFirestore() {
     console.log(`⏱️  Tiempo total: ${duration} segundos`);
 
     // Mostrar resumen final
-    const totalProductos = await getDocs(collection(db, "productos"));
+    const totalProductos = await db.collection("productos").get();
     console.log(`📊 Total de productos en la base de datos: ${totalProductos.size}`);
 
     // Generar resumen de inventario
