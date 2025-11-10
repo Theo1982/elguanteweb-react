@@ -9,6 +9,15 @@ const mockCollection = vi.fn();
 const mockRunTransaction = vi.fn();
 const mockUpdate = vi.fn();
 
+// Mock Firebase properly
+vi.mock('firebase/firestore', () => ({
+  collection: vi.fn(() => ({})), // Return a mock collection reference
+  doc: vi.fn(() => ({})), // Return a mock document reference
+  getDoc: vi.fn(),
+  runTransaction: vi.fn(),
+  updateDoc: vi.fn(),
+}));
+
 const mockDb = {
   collection: mockCollection,
   runTransaction: mockRunTransaction,

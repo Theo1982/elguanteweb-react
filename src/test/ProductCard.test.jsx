@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider } from '../context/AuthContext';
+import { FavoritesProvider } from '../context/FavoritesContext';
 
 // Mock del producto de prueba
 const mockProduct = {
@@ -20,7 +21,11 @@ const mockProduct = {
 const TestWrapper = ({ children }) => ( // eslint-disable-line react/prop-types
   <BrowserRouter>
     <AuthProvider>
-      <CartProvider>{children}</CartProvider>
+      <CartProvider>
+        <FavoritesProvider>
+          {children}
+        </FavoritesProvider>
+      </CartProvider>
     </AuthProvider>
   </BrowserRouter>
 );
