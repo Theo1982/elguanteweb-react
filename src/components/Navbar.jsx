@@ -58,16 +58,14 @@ const Navbar = memo(function Navbar() {
               to="/shop"
               className={`navbar-link ${isActive('/shop') ? 'active' : ''}`}
             >
-              <span aria-hidden="true">🛍️</span>
-              <span>Tienda</span>
+              Tienda
             </Link>
             <Link
               to="/cart"
               className={`navbar-link ${isActive('/cart') ? 'active' : ''}`}
               aria-label={`Carrito de compras${!cartLoading ? `. ${getCartItemsCount()} productos` : ''}`}
             >
-              <span aria-hidden="true">🛒</span>
-              <span>Carrito {!cartLoading && `(${getCartItemsCount()})`}</span>
+              Carrito {!cartLoading && `(${getCartItemsCount()})`}
             </Link>
             {user && (
               <>
@@ -75,29 +73,25 @@ const Navbar = memo(function Navbar() {
                   to="/history"
                   className={`navbar-link ${isActive('/history') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">📜</span>
-                  <span>Historial</span>
+                  Historial
                 </Link>
                 <Link
                   to="/favorites"
                   className={`navbar-link ${isActive('/favorites') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">❤️</span>
-                  <span>Favoritos</span>
+                  Favoritos
                 </Link>
                 <Link
                   to="/referrals"
                   className={`navbar-link ${isActive('/referrals') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">🎁</span>
-                  <span>Referidos</span>
+                  Referidos
                 </Link>
                 <Link
                   to="/coupons"
                   className={`navbar-link ${isActive('/coupons') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">🎫</span>
-                  <span>Cupones</span>
+                  Cupones
                 </Link>
               </>
             )}
@@ -107,36 +101,31 @@ const Navbar = memo(function Navbar() {
                   to="/admin"
                   className={`navbar-link ${isActive('/admin') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">⚙️</span>
-                  <span>Productos</span>
+                  Productos
                 </Link>
                 <Link
                   to="/admin-users"
                   className={`navbar-link ${isActive('/admin-users') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">👥</span>
-                  <span>Usuarios</span>
+                  Usuarios
                 </Link>
                 <Link
                   to="/admin-orders"
                   className={`navbar-link ${isActive('/admin-orders') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">📦</span>
-                  <span>Pedidos</span>
+                  Pedidos
                 </Link>
                 <Link
                   to="/admin-newsletter"
                   className={`navbar-link ${isActive('/admin-newsletter') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">📧</span>
-                  <span>Newsletter</span>
+                  Newsletter
                 </Link>
                 <Link
                   to="/admin-moderation"
                   className={`navbar-link ${isActive('/admin-moderation') ? 'active' : ''}`}
                 >
-                  <span aria-hidden="true">🛡️</span>
-                  <span>Moderación</span>
+                  Moderación
                 </Link>
               </>
             )}
@@ -213,15 +202,13 @@ const Navbar = memo(function Navbar() {
             to="/shop"
             className={`navbar-link navbar-mobile-link ${isActive('/shop') ? 'active' : ''}`}
           >
-            <span aria-hidden="true">🛍️</span>
-            <span>Tienda</span>
+            Tienda
           </Link>
           <Link
             to="/cart"
             className={`navbar-link navbar-mobile-link ${isActive('/cart') ? 'active' : ''}`}
           >
-            <span aria-hidden="true">🛒</span>
-            <span>Carrito {!cartLoading && `(${getCartItemsCount()})`}</span>
+            Carrito {!cartLoading && `(${getCartItemsCount()})`}
           </Link>
           {user && (
             <>
@@ -229,29 +216,25 @@ const Navbar = memo(function Navbar() {
                 to="/history"
                 className={`navbar-link navbar-mobile-link ${isActive('/history') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">📜</span>
-                <span>Historial</span>
+                Historial
               </Link>
               <Link
                 to="/favorites"
                 className={`navbar-link navbar-mobile-link ${isActive('/favorites') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">❤️</span>
-                <span>Favoritos</span>
+                Favoritos
               </Link>
               <Link
                 to="/referrals"
                 className={`navbar-link navbar-mobile-link ${isActive('/referrals') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">🎁</span>
-                <span>Referidos</span>
+                Referidos
               </Link>
               <Link
                 to="/coupons"
                 className={`navbar-link navbar-mobile-link ${isActive('/coupons') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">🎫</span>
-                <span>Cupones</span>
+                Cupones
               </Link>
             </>
           )}
@@ -261,36 +244,31 @@ const Navbar = memo(function Navbar() {
                 to="/admin"
                 className={`navbar-link navbar-mobile-link ${isActive('/admin') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">⚙️</span>
-                <span>Productos</span>
+                Productos
               </Link>
               <Link
                 to="/admin-users"
                 className={`navbar-link navbar-mobile-link ${isActive('/admin-users') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">👥</span>
-                <span>Usuarios</span>
+                Usuarios
               </Link>
               <Link
                 to="/admin-orders"
                 className={`navbar-link navbar-mobile-link ${isActive('/admin-orders') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">📦</span>
-                <span>Pedidos</span>
+                Pedidos
               </Link>
               <Link
                 to="/admin-newsletter"
                 className={`navbar-link navbar-mobile-link ${isActive('/admin-newsletter') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">📧</span>
-                <span>Newsletter</span>
+                Newsletter
               </Link>
               <Link
                 to="/admin-moderation"
                 className={`navbar-link navbar-mobile-link ${isActive('/admin-moderation') ? 'active' : ''}`}
               >
-                <span aria-hidden="true">🛡️</span>
-                <span>Moderación</span>
+                Moderación
               </Link>
             </>
           )}

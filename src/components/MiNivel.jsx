@@ -34,16 +34,16 @@ export default function MiNivel() {
         display: 'inline-block',
         minWidth: '140px',
         padding: '10px 15px',
-        background: 'linear-gradient(to right, #e3f2fd, #bbdefb)',
-        border: '1px solid #1b72e8',
-        borderRadius: '10px',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        border: '2px solid #5a67d8',
+        borderRadius: '15px',
         cursor: 'pointer',
         boxShadow: isHovered
-          ? '0 6px 12px rgba(27, 114, 232, 0.3)'
-          : '0 4px 8px rgba(27, 114, 232, 0.2)',
+          ? '0 8px 16px rgba(102, 126, 234, 0.4)'
+          : '0 6px 12px rgba(102, 126, 234, 0.3)',
         fontSize: '14px',
-        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        transform: isHovered ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'all 0.3s ease',
       }}
       onMouseEnter={() => {
         setShowTooltip(true);
@@ -54,10 +54,10 @@ export default function MiNivel() {
         setIsHovered(false);
       }}
     >
-      <p style={{ margin: 0, fontWeight: 'bold', color: '#1b72e8' }}>
+      <p style={{ margin: 0, fontWeight: 'bold', color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
         🏆 Nivel: {nivel} ({puntos} pts)
       </p>
-      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#555' }}>
+      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#e2e8f0', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
         🎁 Descuento: {descuento}%
       </p>
 
